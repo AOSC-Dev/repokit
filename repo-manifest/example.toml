@@ -1,0 +1,55 @@
+[config]
+# path to the directory containing the tarballs (in AOSC OS' case, it should be the directory that serves https://releases.aosc.io/)
+path = "/tmp/test/"
+# architecture that are considered to be retro
+retro_arches = ["armel", "armhf", "i486"]
+
+# bulletin and mirrors configurations should adhere to https://app.swaggerhub.com/apis-docs/liushuyu/DeployKit/1.0#/
+[bulletin]
+# values allowed: none, info, warning, fatal
+type = "none"
+# bulletin title
+title = ""
+# the value of title-tr here should always be "bulletin-title"
+title-tr = "bulletin-title"
+# bulletin description
+body = ""
+# the value of title-tr here should always be "bulletin-body"
+body-tr = "bulletin-body"
+
+# note that this section uses double brackets
+[[mirrors]]
+name = "BFSU"
+# translation key for the mirror name
+name-tr = "bfsu-name"
+# URL to the root directory of the images directory
+url = "https://mirrors.bfsu.edu.cn/anthon/aosc-os/"
+# physical location of the mirror servers
+loc = "Asia"
+# translation key for the mirror location information
+loc-tr = "bfsu-loc"
+
+[[mirrors]]
+name = "USTC"
+name-tr = "ustc-name"
+url = "https://mirrors.ustc.edu.cn/anthon/aosc-os/"
+loc = "Asia"
+loc-tr = "ustc-loc"
+
+# section names should follow the format: distro.{mainline,retro}.<variant>
+# note that +NVIDIA variants are considered to be separated variants
+[distro.mainline.kde]
+name = "KDE"
+description = "some description"
+
+[distro.mainline.gnome]
+name = "GNOME"
+description = "some description"
+
+[distro.mainline.base]
+name = "Base"
+description = "description"
+
+[distro.retro.base]
+name = "Base"
+description = "description"

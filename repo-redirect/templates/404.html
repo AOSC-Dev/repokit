@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=7" />
+    <link href="https://aosc.io/css/main.min.css" rel="stylesheet">
+    <title>Not Found | AOSC Releases</title>
+    <link rel="icon" href="https://aosc.io/assets/img/aosc.png">
+    <link rel="icon" sizes="any" type="image/svg+xml" href="https://aosc.io/img/aosc.min.svg" />
+</head>
+
+<body>
+    <% include!("./nav.html"); %>
+<div class="blog">
+    <h1 id="downloads" class="title no-top-margin">Our Sincerest Apologies ...</h1>
+    <p>
+        We could not find the system release you requested: AOSC OS,
+        <%- variant %>, <%- arch %> from our repository server. Please contact us by
+        <a href="https://github.com/AOSC-Dev/aosc-os-abbs/issue/new/">creating an issue</a>
+        to inform us about this oversight.
+    </p>
+</div>
+        <hr>
+        <div class="center footer">
+            <span>Copyleft 2011 — 2021, Members of the Community &nbsp;</span></div>
+</body>
+</html>

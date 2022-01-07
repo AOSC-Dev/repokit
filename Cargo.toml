@@ -1,0 +1,14 @@
+[workspace]
+members = [
+  "repo-manifest",
+  "repo-redirect",
+  "repo-notifier"
+]
+resolver = "2"
+
+[profile.release]
+lto = "fat"
+
+[patch.crates-io]
+sailfish = { git = "https://github.com/liushuyu/sailfish", rev = "9342e5a18563fe53bcf4a8502b50709be1339baf" }
+

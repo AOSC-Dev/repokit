@@ -1,0 +1,13 @@
+[Unit]
+Description=AOSC Repository Redirection Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/repo-redirect
+Environment='LISTEN_ADDRESS=127.0.0.1:11451' 'MANIFEST_PATH=/mirror/aosc-os/manifest/'
+Restart=on-failure
+User=repo
+
+[Install]
+WantedBy=multi-user.target

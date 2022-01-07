@@ -1,0 +1,273 @@
+[config]
+path = "/mirror/aosc-os"
+retro_arches = ["armel", "armhf", "i486", "powerpc", "ppc64"]
+
+[bulletin]
+type = "info"
+title = "Thank You for Choosing AOSC OS"
+title-tr = "bulletin-title"
+body = "AOSC OS strives to simplify your user experience and improve your day-to-day productivity."
+body-tr = "bulletin-body"
+
+[[mirrors]]
+name = "Tencent OSS Mirror"
+name-tr = "tencent-name"
+url = "https://mirrors.cloud.tencent.com/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tencent-loc"
+
+[[mirrors]]
+name = "LZUOSS at Lanzhou University"
+name-tr = "lzu-name"
+url = "https://mirror.lzu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "lzu-loc"
+
+[[mirrors]]
+name = "Beijing Foreign Studies University"
+name-tr = "bfsu-name"
+url = "https://mirrors.bfsu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "bfsu-loc"
+
+[[mirrors]]
+name = "Tsinghua University (TUNA)"
+name-tr = "tuna-name"
+url = "https://mirrors.tuna.tsinghua.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tuna-loc"
+
+[[mirrors]]
+name = "LUG@USTC"
+name-tr = "ustc-name"
+url = "https://mirrors.ustc.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "ustc-loc"
+
+[[mirrors]]
+name = "xTom"
+name-tr = "xtom-name"
+url = "https://mirror.xtom.com.hk/anthon/aosc-os/"
+loc = "Hong Kong"
+loc-tr = "xtom-loc"
+
+[[mirrors]]
+name = "University of Tsukuba"
+name-tr = "tsukuba-name"
+url = "http://ftp.tsukuba.wide.ad.jp/Linux/anthon/aosc-os/"
+loc = "Japan"
+loc-tr = "tsukuba-loc"
+
+[[mirrors]]
+name = "NLUUG"
+name-tr = "nluug-name"
+url = "https://ftp.nluug.nl/os/Linux/distr/anthon/aosc-os/"
+loc = "Europe"
+loc-tr = "nluug-loc"
+
+[[mirrors]]
+name = "KoDDoS HK"
+name-tr = "koddos-name"
+url = "https://mirror-hk.koddos.net/anthon/aosc-os/"
+loc = "Hong Kong"
+loc-tr = "koddos-loc"
+
+[[mirrors]]
+name = "OSSPlanet Mirror Server"
+name-tr = "ossplanet-name"
+url = "https://ftp.ubuntu-tw.net/mirror/anthonos/aosc-os/"
+loc = "Taiwan"
+loc-tr = "ossplanet-loc"
+
+[[mirrors]]
+name = "Fastly CDN"
+name-tr = "fastly-name"
+url = "https://aosc-repo.freetls.fastly.net/aosc-os/"
+loc = "Worldwide"
+loc-tr = "fastly-loc"
+
+[distro.mainline.kde]
+name = "Plasma (a.k.a. KDE)"
+name-tr = "kde-name"
+description = "KDE (Plasma Desktop) provides an extensive set of functionality with virtually unlimited amount of customizable settings, and comes complete with an elegant interface. With a strong set of utilities, games, and tools, KDE is quite suitable for day-to-day desktop computing with a refreshing sense of aesthetic."
+description-tr = "kde-description"
+
+[distro.mainline."kde+nvidia"]
+name = "Plasma (a.k.a. KDE) (with NVIDIA mainline driver)"
+name-tr = "kde+nvidia-name"
+description = "KDE (Plasma Desktop) provides an extensive set of functionality with virtually unlimited amount of customizable settings, and comes complete with an elegant interface. With a strong set of utilities, games, and tools, KDE is quite suitable for day-to-day desktop computing with a refreshing sense of aesthetic. (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "kde+nvidia-description"
+
+[distro.mainline."kde+nvidia340"]
+name = "Plasma (a.k.a. KDE) (with NVIDIA 340.* driver)"
+name-tr = "kde+nvidia340-name"
+description = "KDE (Plasma Desktop) provides an extensive set of functionality with virtually unlimited amount of customizable settings, and comes complete with an elegant interface. With a strong set of utilities, games, and tools, KDE is quite suitable for day-to-day desktop computing with a refreshing sense of aesthetic. (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "kde+nvidia340-description"
+
+[distro.mainline."kde+nvidia390"]
+name = "Plasma (a.k.a. KDE) (with NVIDIA 390.* driver)"
+name-tr = "kde+nvidia390-name"
+description = "KDE (Plasma Desktop) provides an extensive set of functionality with virtually unlimited amount of customizable settings, and comes complete with an elegant interface. With a strong set of utilities, games, and tools, KDE is quite suitable for day-to-day desktop computing with a refreshing sense of aesthetic. (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "kde+nvidia390-description"
+
+[distro.mainline.gnome]
+name = "GNOME"
+name-tr = "gnome-name"
+description = "GNOME is a desktop environment with a strong emphasis on human interactivity, multilingual support, and accessibility. Designed as a desktop for humanity, GNOME provides users with a minimal yet elegant interface for those who may understand its innovative logic in desktop computing."
+description-tr = "gnome-description"
+
+[distro.mainline."gnome+nvidia"]
+name = "GNOME (with NVIDIA mainline driver)"
+name-tr = "gnome+nvidia-name"
+description = "GNOME is a desktop environment with a strong emphasis on human interactivity, multilingual support, and accessibility. Designed as a desktop for humanity, GNOME provides users with a minimal yet elegant interface for those who may understand its innovative logic in desktop computing. (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "gnome+nvidia-description"
+
+[distro.mainline."gnome+nvidia340"]
+name = "GNOME (with NVIDIA 340.* driver)"
+name-tr = "gnome+nvidia340-name"
+description = "GNOME is a desktop environment with a strong emphasis on human interactivity, multilingual support, and accessibility. Designed as a desktop for humanity, GNOME provides users with a minimal yet elegant interface for those who may understand its innovative logic in desktop computing. (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "gnome+nvidia340-description"
+
+[distro.mainline."gnome+nvidia390"]
+name = "GNOME (with NVIDIA 390.* driver)"
+name-tr = "gnome+nvidia390-name"
+description = "GNOME is a desktop environment with a strong emphasis on human interactivity, multilingual support, and accessibility. Designed as a desktop for humanity, GNOME provides users with a minimal yet elegant interface for those who may understand its innovative logic in desktop computing. (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "gnome+nvidia390-description"
+
+[distro.mainline.xfce]
+name = "Xfce"
+name-tr = "xfce-name"
+description = "XFCE, like its logo, is a quick and smart little rat on your desktop. This is a desktop with rich customizability, responsive interface, and a small footprint. XFCE can run very quick even on older machines while providing a complete desktop experience, making it a near perfect choice for performance constrained devices."
+description-tr = "xfce-description"
+
+[distro.mainline.mate]
+name = "MATE"
+name-tr = "mate-name"
+description = "MATE is a desktop environment that sticks to the traditions - in which the developers of this particular desktop environment believe. Despite being a GNOME 2 fork, MATE is never contempt with using older technologies. Instead, MATE continuously adapts itself to the newest technologies, while trying its best to provide users with a familiar desktop experience."
+description-tr = "mate-description"
+
+[distro.mainline.cinnamon]
+name = "Cinnamon"
+name-tr = "cinnamon-name"
+description = "Cinnamon was initially a fork of GNOME Shell in an effor to provide a traditional interface suitable for keyboard and mouse. Cinnamon builds upon GNOME's technical frameworks and applications, preserving the same ease of use in mind, while providing more customizability."
+description-tr = "cinnamon-description"
+
+[distro.mainline.lxde]
+name = "LXDE"
+name-tr = "lxde-name"
+description = "LXDE, or Lightweight X11 Desktop Environment in full is a lightweight desktop environment with a seemingly microscopic memory footprint. This is one of the better choices to go for on a older PC or low performance device. LXDE is extremely customizable, a perfect choice for those looking for a full desktop environment while wanting to keep in control of every aspect of their desktop. "
+description-tr = "lxde-description"
+
+[distro.mainline.base]
+name = "Base"
+name-tr = "base-name"
+description = "The Base variant provides a minimal set of features, just enough for you to get started. Base is still a pre-configured variant like other AOSC OS variants. Therefore, Base is suitable for performance constrained devices and servers."
+description-tr = "base-description"
+
+[distro.mainline.buildkit]
+name = "BuildKit"
+name-tr = "buildkit-name"
+description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description-tr = "buildkit-description"
+
+[distro.mainline.server]
+name = "Server"
+name-tr = "server-name"
+description = "Server releases are base system releases with additional tools for hosting remote files and Web contents, providing network routing, and other functions that enriches network access and resources for client devices."
+description-tr = "server-description"
+
+[distro.mainline."xfce+nvidia"]
+name = "Xfce (with NVIDIA mainline driver)"
+name-tr = "xfce+nvidia-name"
+description = "XFCE, like its logo, is a quick and smart little rat on your desktop. This is a desktop with rich customizability, responsive interface, and a small footprint. XFCE can run very quick even on older machines while providing a complete desktop experience, making it a near perfect choice for performance constrained devices. (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "xfce+nvidia-description"
+
+[distro.mainline."xfce+nvidia340"]
+name = "Xfce (with NVIDIA 340.* driver)"
+name-tr = "xfce+nvidia340-name"
+description = "XFCE, like its logo, is a quick and smart little rat on your desktop. This is a desktop with rich customizability, responsive interface, and a small footprint. XFCE can run very quick even on older machines while providing a complete desktop experience, making it a near perfect choice for performance constrained devices. (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "xfce+nvidia340-description"
+
+[distro.mainline."xfce+nvidia390"]
+name = "Xfce (with NVIDIA 390.* driver)"
+name-tr = "xfce+nvidia390-name"
+description = "XFCE, like its logo, is a quick and smart little rat on your desktop. This is a desktop with rich customizability, responsive interface, and a small footprint. XFCE can run very quick even on older machines while providing a complete desktop experience, making it a near perfect choice for performance constrained devices. (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "xfce+nvidia390-description"
+
+[distro.mainline."mate+nvidia"]
+name = "MATE (with NVIDIA mainline driver)"
+name-tr = "mate+nvidia-name"
+description = "MATE is a desktop environment that sticks to the traditions - in which the developers of this particular desktop environment believe. Despite being a GNOME 2 fork, MATE is never contempt with using older technologies. Instead, MATE continuously adapts itself to the newest technologies, while trying its best to provide users with a familiar desktop experience. (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "mate+nvidia-description"
+
+[distro.mainline."mate+nvidia340"]
+name = "MATE (with NVIDIA 340.* driver)"
+name-tr = "mate+nvidia340-name"
+description = "MATE is a desktop environment that sticks to the traditions - in which the developers of this particular desktop environment believe. Despite being a GNOME 2 fork, MATE is never contempt with using older technologies. Instead, MATE continuously adapts itself to the newest technologies, while trying its best to provide users with a familiar desktop experience. (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "mate+nvidia340-description"
+
+[distro.mainline."mate+nvidia390"]
+name = "MATE (with NVIDIA 390.* driver)"
+name-tr = "mate+nvidia390-name"
+description = "MATE is a desktop environment that sticks to the traditions - in which the developers of this particular desktop environment believe. Despite being a GNOME 2 fork, MATE is never contempt with using older technologies. Instead, MATE continuously adapts itself to the newest technologies, while trying its best to provide users with a familiar desktop experience. (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "mate+nvidia390-description"
+
+[distro.mainline."cinnamon+nvidia"]
+name = "Cinnamon (with NVIDIA mainline driver)"
+name-tr = "cinnamon+nvidia-name"
+description = "Cinnamon was initially a fork of GNOME Shell in an effor to provide a traditional interface suitable for keyboard and mouse. Cinnamon builds upon GNOME's technical frameworks and applications, preserving the same ease of use in mind, while providing more customizability. (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "cinnamon+nvidia-description"
+
+[distro.mainline."cinnamon+nvidia340"]
+name = "Cinnamon (with NVIDIA 340.* driver)"
+name-tr = "cinnamon+nvidia340-name"
+description = "Cinnamon was initially a fork of GNOME Shell in an effor to provide a traditional interface suitable for keyboard and mouse. Cinnamon builds upon GNOME's technical frameworks and applications, preserving the same ease of use in mind, while providing more customizability. (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "cinnamon+nvidia340-description"
+
+[distro.mainline."cinnamon+nvidia390"]
+name = "Cinnamon (with NVIDIA 390.* driver)"
+name-tr = "cinnamon+nvidia390-name"
+description = "Cinnamon was initially a fork of GNOME Shell in an effor to provide a traditional interface suitable for keyboard and mouse. Cinnamon builds upon GNOME's technical frameworks and applications, preserving the same ease of use in mind, while providing more customizability. (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "cinnamon+nvidia390-description"
+
+[distro.mainline."lxde+nvidia"]
+name = "LXDE (with NVIDIA mainline driver)"
+name-tr = "lxde+nvidia-name"
+description = "LXDE, or Lightweight X11 Desktop Environment in full is a lightweight desktop environment with a seemingly microscopic memory footprint. This is one of the better choices to go for on a older PC or low performance device. LXDE is extremely customizable, a perfect choice for those looking for a full desktop environment while wanting to keep in control of every aspect of their desktop.  (preinstalled with NVIDIA Proprietary Drivers [mainline driver])"
+description-tr = "lxde+nvidia-description"
+
+[distro.mainline."lxde+nvidia340"]
+name = "LXDE (with NVIDIA 340.* driver)"
+name-tr = "lxde+nvidia340-name"
+description = "LXDE, or Lightweight X11 Desktop Environment in full is a lightweight desktop environment with a seemingly microscopic memory footprint. This is one of the better choices to go for on a older PC or low performance device. LXDE is extremely customizable, a perfect choice for those looking for a full desktop environment while wanting to keep in control of every aspect of their desktop.  (preinstalled with NVIDIA Proprietary Drivers [340.* driver])"
+description-tr = "lxde+nvidia340-description"
+
+[distro.mainline."lxde+nvidia390"]
+name = "LXDE (with NVIDIA 390.* driver)"
+name-tr = "lxde+nvidia390-name"
+description = "LXDE, or Lightweight X11 Desktop Environment in full is a lightweight desktop environment with a seemingly microscopic memory footprint. This is one of the better choices to go for on a older PC or low performance device. LXDE is extremely customizable, a perfect choice for those looking for a full desktop environment while wanting to keep in control of every aspect of their desktop.  (preinstalled with NVIDIA Proprietary Drivers [390.* driver])"
+description-tr = "lxde+nvidia390-description"
+
+[distro.retro.x11]
+name = "X11"
+name-tr = "retro-x11-name"
+description = "A basic system release bundled with X graphical user interface support. This release contains a basic desktop environment and graphical tools for devices with graphical hardware acceleration."
+description-tr = "retro-x11-description"
+
+[distro.retro.base]
+name = "Base"
+name-tr = "retro-base-name"
+description = "A base system release with a minimal set of applications and tools to get you started. This release is recommended for older, headless (non-graphical), or storage constrained systems."
+description-tr = "retro-base-description"
+
+[distro.retro.server]
+name = "Server"
+name-tr = "retro-server-name"
+description = "A base system release bundled with server applications, for performance and storage contraint servers and older development boards."
+description-tr = "retro-server-description"
+
+[distro.retro.buildkit]
+name = "BuildKit"
+name-tr = "buildkit-name"
+description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description-tr = "buildkit-description"

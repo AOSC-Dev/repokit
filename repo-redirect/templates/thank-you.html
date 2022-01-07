@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=7" />
+    <meta http-equiv="refresh" content="0; url=<%- url %> ">
+    <link href="https://aosc.io/css/main.min.css" rel="stylesheet">
+    <title>Downl. | AOSC Releases</title>
+    <link rel="icon" href="https://aosc.io/assets/img/aosc.png">
+    <link rel="icon" sizes="any" type="image/svg+xml" href="https://aosc.io/img/aosc.min.svg" />
+</head>
+
+<body>
+    <% include!("./nav.html"); %>
+<div class="blog">
+    <h1 id="downloads" class="title no-top-margin">Coming Right Up ...</h1>
+    <p>
+        We are now preparing your requested download. Your download
+        information is listed as follows, if your download does not start
+        automatically, please refer to the direct link as shown below.
+    </p>
+
+    <h2>Download Information</h2>
+    <p>
+        You are downloading AOSC OS, <%- variant %>, for <%- arch %> devices. Your download
+        link and SHA256 checksum are as follows.
+    </p>
+    <p>
+        File location:
+    </p>
+    <pre><a href="<%= url %>"><%- url %></a></pre>
+    <p>
+        SHA256 Checksum:
+    </p>
+    <pre><%- sha256 %></pre>
+</div>
+        <hr>
+        <div class="center footer">
+            <span>Copyleft 2011 — 2021, Members of the Community &nbsp;</span></div>
+    </div>
+</body>
+</html>
