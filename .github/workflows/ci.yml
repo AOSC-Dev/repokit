@@ -3,7 +3,7 @@ name: Rust
 on: [push, pull_request]
 
 env:
-  DATABASE_URL: "sqlite3://verify.db"
+  DATABASE_URL: "sqlite://verify.db"
 
 jobs:
   build:
@@ -12,11 +12,11 @@ jobs:
     - uses: hecrj/setup-rust-action@master
       with:
         rust-version: stable
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libsystemd-dev liblzma-dev libdbus-1-dev libzstd-dev libzmq3-dev
+    - uses: actions/checkout@v2
     - name: Prepare database
       run: ./.ci/prepare.sh
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libsystemd-dev liblzma-dev libdbus-1-dev libzstd-dev
-    - uses: actions/checkout@v2
     - name: Build
       run: cargo build --verbose
     - name: Test
