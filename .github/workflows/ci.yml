@@ -12,7 +12,8 @@ jobs:
     - uses: hecrj/setup-rust-action@master
       with:
         rust-version: stable
-
+    - name: Prepare database
+      run: ./.ci/prepare.sh
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libsystemd-dev liblzma-dev libdbus-1-dev libzstd-dev
     - uses: actions/checkout@v2
