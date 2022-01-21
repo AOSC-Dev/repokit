@@ -2,10 +2,12 @@ use crate::parser::{
     flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, Tarball, UserConfig,
 };
 use anyhow::{anyhow, Result};
+use backhand::FilesystemReader;
 use log::{error, info, warn};
 use parking_lot::Mutex;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::{
     convert::TryInto,
@@ -45,6 +47,24 @@ fn is_tarball(entry: &DirEntry) -> bool {
 }
 
 #[inline]
+fn is_squashfs(entry: &DirEntry) -> bool {
+    let path = entry.path();
+    let reader = std::fs::File::open(path);
+    if reader.is_err() {
+        return false;
+    }
+    let mut reader = reader.unwrap();
+    let mut buffer = [0u8; 4];
+
+    reader.read(&mut buffer).ok() == Some(4) && buffer == b"hsqs"[..]
+}
+
+#[inline]
+fn is_install_media(entry: &DirEntry) -> bool {
+    is_tarball(entry) || is_squashfs(entry)
+}
+
+#[inline]
 fn is_iso(entry: &DirEntry) -> bool {
     entry
         .file_name()
@@ -62,17 +82,45 @@ pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
 }
 
 /// Calculate the decompressed size of the given tarball
-pub fn calculate_decompressed_size<R: Read>(reader: R) -> Result<u64> {
-    let mut buffer = [0u8; 4096];
-    let mut decompress = XzDecoder::new(reader);
-    loop {
-        let size = decompress.read(&mut buffer)?;
-        if size < 1 {
-            break;
-        }
+pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path) -> Result<u64> {
+    let mut buffer = [0u8; 4];
+    let size = reader.read(&mut buffer)?;
+    if size != 4 {
+        return Err(anyhow!("File too small!"));
     }
 
-    Ok(decompress.total_out())
+    reader
+        .seek(SeekFrom::Start(0))
+        .map_err(|e| anyhow!("Could not seek {}", e))?;
+
+    let size = if buffer == b"hsqs"[..] {
+        let archive = BufReader::new(std::fs::File::open(archive)?);
+        let reader = FilesystemReader::from_reader(archive)?;
+        let mut size = 0;
+
+        for node in reader.files() {
+            match &node.inner {
+                backhand::InnerNode::File(f) => size += f.basic.file_size,
+                _ => continue,
+            }
+        }
+
+        size.into()
+    } else {
+        let mut buffer = [0u8; 4096];
+        let mut decompress = XzDecoder::new(reader);
+
+        loop {
+            let size = decompress.read(&mut buffer)?;
+            if size < 1 {
+                break;
+            }
+        }
+
+        decompress.total_out()
+    };
+
+    Ok(size)
 }
 
 fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
@@ -95,7 +143,7 @@ fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
 }
 
 pub fn collect_tarballs<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
-    collect_files(root, is_tarball)
+    collect_files(root, is_install_media)
 }
 
 pub fn collect_iso<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
@@ -217,20 +265,25 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
         );
         let mut f = unwrap_or_show_error!("Could not open {}: {}", p.display(), File::open(p));
         let real_size = unwrap_or_show_error!(
-            "Could not read as xz stream {}: {}",
+            "Could not read file as stream {}: {}",
             p.display(),
             if raw {
                 f.seek(SeekFrom::End(0))
                     .map_err(|e| anyhow!("Could not seek {}", e))
             } else {
-                calculate_decompressed_size(&f)
+                calculate_decompressed_size(&f, p)
             }
         );
         let inst_size: i64 = real_size.try_into().unwrap();
-        let pos =
-            unwrap_or_show_error!("Could not ftell() {}: {}", p.display(), f.stream_position());
-        let download_size: i64 = pos.try_into().unwrap();
-        unwrap_or_show_error!("Could not seek() {}: {}", p.display(), f.rewind());
+        let f_metadata =
+            unwrap_or_show_error!("Could not read metadata {}: {}", p.display(), f.metadata());
+        let download_size = f_metadata.len();
+        let download_size: i64 = download_size.try_into().unwrap();
+        unwrap_or_show_error!(
+            "Could not seek() {}: {}",
+            p.display(),
+            f.seek(SeekFrom::Start(0))
+        );
         let sha256sum = unwrap_or_show_error!(
             "Could not update sha256sum of {}: {}",
             p.display(),
