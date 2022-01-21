@@ -309,7 +309,7 @@ async fn monitor_pv(
                         if !MSGSENT.fetch_and(false, Ordering::SeqCst) && new_protocol {
                             send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
                         }
-                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);                
+                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
                     }
                     pending_time = COOLDOWN_TIME; // reset the pending time
                     continue;
@@ -400,9 +400,7 @@ async fn run() -> Result<()> {
                 answer(cx, cmd, pool_clone.clone())
             })
             .await;
-            Ok(
-                (),
-            )
+            Ok(())
         },
         monitor_pv(rx, &bot, &pool, new_protocol),
         async {
