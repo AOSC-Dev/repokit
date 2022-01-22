@@ -19,6 +19,28 @@ use tempfile::tempdir;
 use walkdir::{DirEntry, WalkDir};
 use xz2::read::XzDecoder;
 
+const SQUASHFS_EXTRACT_LIST: [&str; 19] = [
+    "bin",
+    "boot",
+    "efi",
+    "etc",
+    "home",
+    "include",
+    "lib",
+    "lib64",
+    "lost+found",
+    "media",
+    "mnt",
+    "opt",
+    "root",
+    "run",
+    "sbin",
+    "srv",
+    "tmp",
+    "usr",
+    "var",
+];
+
 macro_rules! unwrap_or_show_error {
     ($m:tt, $p:expr, $f:stmt) => {{
         let tmp = { $f };
@@ -94,6 +116,9 @@ pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path
     if size != 4 {
         return Err(anyhow!("File too small!"));
     }
+    reader
+        .seek(SeekFrom::Start(0))
+        .map_err(|e| anyhow!("Could not seek {}", e))?;
     let size = if buffer == b"hsqs"[..] {
         let tmp = tempdir()?;
         let tmp_path = tmp.path();
@@ -110,27 +135,7 @@ pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path
             .arg("-d")
             .arg(&tmp_path)
             .arg(archive)
-            .args(vec![
-                "bin",
-                "boot",
-                "efi",
-                "etc",
-                "home",
-                "include",
-                "lib",
-                "lib64",
-                "lost+found",
-                "media",
-                "mnt",
-                "opt",
-                "root",
-                "run",
-                "sbin",
-                "srv",
-                "tmp",
-                "usr",
-                "var",
-            ])
+            .args(SQUASHFS_EXTRACT_LIST)
             .output()?;
         if !command.status.success() {
             return Err(anyhow!(
@@ -156,9 +161,6 @@ pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path
 
         size
     } else {
-        reader
-            .seek(SeekFrom::Start(0))
-            .map_err(|e| anyhow!("Could not seek {}", e))?;
         let mut buffer = [0u8; 4096];
         let mut decompress = XzDecoder::new(reader);
         loop {
@@ -326,12 +328,10 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
             }
         );
         let inst_size: i64 = real_size.try_into().unwrap();
-        let pos = unwrap_or_show_error!(
-            "Could not ftell() {}: {}",
-            p.display(),
-            f.seek(SeekFrom::Current(0))
-        );
-        let download_size: i64 = pos.try_into().unwrap();
+        let f_metadata =
+            unwrap_or_show_error!("Could not read metadata {}: {}", p.display(), f.metadata());
+        let download_size = f_metadata.len();
+        let download_size: i64 = download_size.try_into().unwrap();
         unwrap_or_show_error!(
             "Could not seek() {}: {}",
             p.display(),
