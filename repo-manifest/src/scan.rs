@@ -318,7 +318,7 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
         );
         let mut f = unwrap_or_show_error!("Could not open {}: {}", p.display(), File::open(p));
         let real_size = unwrap_or_show_error!(
-            "Could not read as xz stream {}: {}",
+            "Could not read file as stream {}: {}",
             p.display(),
             if raw {
                 f.seek(SeekFrom::End(0))
