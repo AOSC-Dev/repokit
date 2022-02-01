@@ -19,8 +19,8 @@ struct Args {
 }
 
 fn main() {
-    env_logger::init();
     std::env::set_var("RUST_LOG", "info");
+    env_logger::init();
     let matches = Args::parse();
     let config = &matches.config;
     info!("Reading config from {}...", config);
