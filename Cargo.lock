@@ -1954,6 +1954,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "sha2 0.10.1",
+ "tempfile",
  "toml 0.5.8",
  "walkdir",
  "xz2",
