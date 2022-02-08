@@ -5,5 +5,5 @@ sqlite3 verify.db < "$SRCDIR"/repo-notifier/migrations/*.sql
 abinfo "Adjusting compiler flags to native ..."
 COMMON_FLAGS="-march=native -mllvm -polly -mllvm -polly-vectorizer=stripmine"
 export CFLAGS="$CFLAGS $COMMON_FLAGS"
-export CXXFLAGS="CXXFLAGS $COMMON_FLAGS"
-export LDFLAGS="$LDFLAGS -march=native"
+export CXXFLAGS="$CXXFLAGS $COMMON_FLAGS"
+export LDFLAGS="$LDFLAGS $COMMON_FLAGS"

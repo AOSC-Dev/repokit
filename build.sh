@@ -34,6 +34,7 @@ trap cleanup EXIT SIGINT SIGTERM
 cd "$TMPDIR"
 echo "Start building ..."
 git clone https://github.com/AOSC-Dev/repokit.git && cd repokit
+sed -i 's|lto = "fat"|lto = true|g' Cargo.toml
 cat << EOF >> autobuild/defines
 # auto-generated ->
 PKGVER=0+git$(get_git_date)
