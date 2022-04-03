@@ -30,7 +30,7 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
     let metadata = topic_path.metadata()?;
     let created = metadata
         .created()
-        .unwrap_or(metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH))
+        .unwrap_or_else(|_| metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH))
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap_or_else(|_| Duration::new(0, 0))
         .as_secs();

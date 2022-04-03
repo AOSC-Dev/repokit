@@ -171,12 +171,11 @@ pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Varian
     }
     let retro_arches = &config.config.retro_arches;
     for file in files {
-        let v;
-        if retro_arches.contains(&file.arch) {
-            v = variants_r.get_mut(&file.variant);
+        let v = if retro_arches.contains(&file.arch) {
+            variants_r.get_mut(&file.variant)
         } else {
-            v = variants.get_mut(&file.variant);
-        }
+            variants.get_mut(&file.variant)
+        };
         if let Some(v) = v {
             v.tarballs.push(file);
         } else {

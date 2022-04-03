@@ -71,17 +71,16 @@ fn scan_images(root_path: &str) -> Result<String> {
     }
     let previous_manifest_path = Path::new(root_path).join("manifest/livekit.json");
     let previous_manifest = read(previous_manifest_path);
-    let scanned;
-    if let Err(e) = previous_manifest {
+    let scanned = if let Err(e) = previous_manifest {
         warn!("Failed to read the previous manifest: {}", e);
         warn!("Falling back to full scan!");
         info!("Scanning {} images...", files.len());
-        scanned = scan::scan_files(&files, root_path, true)?;
+        scan::scan_files(&files, root_path, true)?
     } else {
         let existing_files: Vec<parser::Tarball> =
             serde_json::from_slice(previous_manifest.as_ref().unwrap())?;
-        scanned = scan::increment_scan_files(files, existing_files, root_path, true)?;
-    }
+        scan::increment_scan_files(files, existing_files, root_path, true)?
+    };
     info!("Generating manifest...");
 
     Ok(serde_json::to_string(&scanned)?)
@@ -94,16 +93,14 @@ fn scan_tarballs(root_path: &str, config_data: parser::UserConfig) -> Result<Str
     }
     let previous_manifest_path = Path::new(root_path).join("manifest/recipe.json");
     let previous_manifest = read(previous_manifest_path);
-    let scanned;
-    if let Err(e) = previous_manifest {
+    let scanned = if let Err(e) = previous_manifest {
         warn!("Failed to read the previous manifest: {}", e);
         warn!("Falling back to full scan!");
         info!("Scanning {} tarballs...", files.len());
-        scanned = scan::scan_files(&scan::filter_files(files, &config_data), root_path, false)?;
+        scan::scan_files(&scan::filter_files(files, &config_data), root_path, false)?
     } else {
-        scanned =
-            scan::smart_scan_files(previous_manifest.unwrap(), &config_data, files, root_path)?;
-    }
+        scan::smart_scan_files(previous_manifest.unwrap(), &config_data, files, root_path)?
+    };
     info!("Generating manifest...");
     let variants = parser::assemble_variants(&config_data, scanned);
     let manifest = parser::assemble_manifest(config_data, variants);

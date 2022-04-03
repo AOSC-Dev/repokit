@@ -52,7 +52,7 @@ fn create_request(repo: &str) -> Result<RequestBuilder> {
 }
 
 pub fn fetch_descriptions(repo: &str) -> Result<HashMap<String, String>> {
-    let repo_name = repo.splitn(2, '/').nth(0);
+    let repo_name = repo.split('/').next();
     repo_name.ok_or_else(|| anyhow!("Invalid repo name: {}", repo))?;
     let mut results: HashMap<String, String> = HashMap::new();
     let mut page = 1usize;
