@@ -9,12 +9,11 @@ use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
 use teloxide::{
-    payloads::SendMessageSetters, prelude::*, types::ParseMode, utils::command::BotCommand,
+    payloads::SendMessageSetters, prelude2::*, types::ParseMode, utils::command::BotCommand,
     RequestError,
 };
 use tokio::time::sleep;
 
-const BOT_NAME: &str = "AOSC 第三包通委";
 const LIST_MAX_SIZE: usize = 22;
 // The maximum size of a Telegram message is 4096 chars. 4000 is just for the safety.
 const LIST_MAX_LENGTH: isize = 4000;
@@ -38,7 +37,7 @@ macro_rules! send_to_subscribers {
     };
 }
 
-#[derive(BotCommand)]
+#[derive(BotCommand, Clone)]
 #[command(rename = "lowercase", description = "These commands are supported:")]
 enum Command {
     #[command(description = "display this text.")]
@@ -309,7 +308,7 @@ async fn monitor_pv(
                         if !MSGSENT.fetch_and(false, Ordering::SeqCst) && new_protocol {
                             send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
                         }
-                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);                
+                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
                     }
                     pending_time = COOLDOWN_TIME; // reset the pending time
                     continue;
@@ -353,28 +352,28 @@ async fn monitor_last_update(f: &str, _: &AutoSend<Bot>, _: &sqlite::SqlitePool)
 
 /// Handle bot commands from Telegram
 async fn answer(
-    cx: UpdateWithCx<AutoSend<Bot>, Message>,
+    bot: AutoSend<Bot>,
+    message: Message,
     command: Command,
     pool: sqlite::SqlitePool,
 ) -> Result<()> {
+    let id = message.chat.id;
     match command {
-        Command::Help => cx.reply_to(Command::descriptions()).send().await?,
+        Command::Help => bot.send_message(id, Command::descriptions()).await?,
         Command::Start => {
-            let id = cx.chat_id();
             query!("INSERT OR IGNORE INTO subbed (chat_id) VALUES (?)", id)
                 .execute(&pool)
                 .await?;
-            cx.reply_to("Subscribed to updates.").await?
+            bot.send_message(id, "Subscribed to updates.").await?
         }
         Command::Stop => {
-            let id = cx.chat_id();
             query!("DELETE FROM subbed WHERE chat_id = ?", id)
                 .execute(&pool)
                 .await?;
-            cx.reply_to("Unsubbed.").await?
+            bot.send_message(id, "Unsubbed.").await?
         }
-        Command::Ping => cx.reply_to("Pong!").await?,
-        Command::ChatID => cx.reply_to(format!("{}", cx.chat_id())).await?,
+        Command::Ping => bot.send_message(id, "Pong!").await?,
+        Command::ChatID => bot.send_message(id, id.to_string()).await?,
     };
 
     Ok(())
@@ -386,7 +385,7 @@ async fn run() -> Result<()> {
     let zmq_addr =
         std::env::var("ZMQ_ENDPOINT").expect("Please set ZMQ_ENDPOINT environment variable!");
     let new_protocol = std::env::var("NEW_PROTOCOL").is_ok();
-    teloxide::enable_logging!();
+    pretty_env_logger::init();
     log::info!("Starting bot...");
 
     let rx = connect_zmq(&zmq_addr).expect("Unable to connect to zmq endpoint!");
@@ -396,13 +395,13 @@ async fn run() -> Result<()> {
     let pool_clone = pool.clone();
     tokio::try_join!(
         async {
-            teloxide::commands_repl(bot.clone(), BOT_NAME, move |cx, cmd| {
-                answer(cx, cmd, pool_clone.clone())
-            })
-            .await;
-            Ok(
-                (),
+            teloxide::repls2::commands_repl(
+                bot.clone(),
+                move |cx, msg, cmd| answer(cx, msg, cmd, pool_clone.clone()),
+                Command::ty(),
             )
+            .await;
+            Ok(())
         },
         monitor_pv(rx, &bot, &pool, new_protocol),
         async {
