@@ -90,13 +90,13 @@ loc-tr = "fastly-loc"
 name = "Desktop"
 name-tr = "desktop-name"
 description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface."
-description-tr = "kde-description"
+description-tr = "desktop-description"
 
 [distro.mainline."desktop+nvidia"]
 name = "Desktop (with NVIDIA mainline driver)"
 name-tr = "desktop+nvidia-name"
 description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface (with pre-installed NVIDIA Proprietary Drivers)."
-description-tr = "kde+nvidia-description"
+description-tr = "desktop+nvidia-description"
 
 [distro.mainline.base]
 name = "Base"
