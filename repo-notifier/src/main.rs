@@ -9,7 +9,7 @@ use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
 use teloxide::{
-    payloads::SendMessageSetters, prelude2::*, types::ParseMode, utils::command::BotCommand,
+    payloads::SendMessageSetters, prelude::*, types::{ParseMode, ChatId}, utils::command::BotCommands,
     RequestError,
 };
 use tokio::time::sleep;
@@ -37,7 +37,7 @@ macro_rules! send_to_subscribers {
     };
 }
 
-#[derive(BotCommand, Clone)]
+#[derive(BotCommands, Clone)]
 #[command(rename = "lowercase", description = "These commands are supported:")]
 enum Command {
     #[command(description = "display this text.")]
@@ -189,7 +189,7 @@ fn format_sorted_mapping(mapping: EntryMapping) -> String {
 #[inline]
 async fn send_with_retry(msg: &str, bot: &AutoSend<Bot>, chat_id: i64) -> Result<()> {
     let mut retries = 5usize;
-    let mut chat_id = chat_id;
+    let mut chat_id = ChatId(chat_id);
     while retries > 0 {
         let result = bot
             .send_message(chat_id, msg)
@@ -199,17 +199,12 @@ async fn send_with_retry(msg: &str, bot: &AutoSend<Bot>, chat_id: i64) -> Result
             retries -= 1;
             match e {
                 RequestError::RetryAfter(t) => {
-                    log::warn!("Rate limited, will retry after {} seconds", t);
-                    if t > 0 {
-                        sleep(Duration::from_secs(t as u64)).await;
-                    } else {
-                        // the fuck?
-                        sleep(Duration::from_secs(60)).await;
-                    }
+                    log::warn!("Rate limited, will retry after {} seconds", t.as_secs());
+                    sleep(t).await;
                 }
                 RequestError::MigrateToChatId(id) => {
                     log::warn!("Chat ID {} changed to {}", chat_id, id);
-                    chat_id = id;
+                    chat_id.0 = id;
                 }
                 _ => {
                     log::warn!("Unexpected error occurred ({:?}), retrying ...", e);
@@ -359,15 +354,15 @@ async fn answer(
 ) -> Result<()> {
     let id = message.chat.id;
     match command {
-        Command::Help => bot.send_message(id, Command::descriptions()).await?,
+        Command::Help => bot.send_message(id, Command::descriptions().to_string()).await?,
         Command::Start => {
-            query!("INSERT OR IGNORE INTO subbed (chat_id) VALUES (?)", id)
+            query!("INSERT OR IGNORE INTO subbed (chat_id) VALUES (?)", id.0)
                 .execute(&pool)
                 .await?;
             bot.send_message(id, "Subscribed to updates.").await?
         }
         Command::Stop => {
-            query!("DELETE FROM subbed WHERE chat_id = ?", id)
+            query!("DELETE FROM subbed WHERE chat_id = ?", id.0)
                 .execute(&pool)
                 .await?;
             bot.send_message(id, "Unsubbed.").await?
@@ -395,7 +390,7 @@ async fn run() -> Result<()> {
     let pool_clone = pool.clone();
     tokio::try_join!(
         async {
-            teloxide::repls2::commands_repl(
+            teloxide::commands_repl(
                 bot.clone(),
                 move |cx, msg, cmd| answer(cx, msg, cmd, pool_clone.clone()),
                 Command::ty(),
