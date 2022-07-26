@@ -93,7 +93,7 @@ description = "Our standard desktop distribution, powered by the KDE Plasma Desk
 description-tr = "desktop-description"
 
 [distro.mainline."desktop+nvidia"]
-name = "Desktop (with NVIDIA mainline driver)"
+name = "Desktop (with NVIDIA driver)"
 name-tr = "desktop+nvidia-name"
 description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface (with pre-installed NVIDIA Proprietary Drivers)."
 description-tr = "desktop+nvidia-description"
