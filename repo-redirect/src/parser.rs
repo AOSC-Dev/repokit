@@ -4,6 +4,7 @@ use inotify::{Inotify, WatchMask};
 use log::error;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
@@ -35,31 +36,40 @@ pub struct Recipe {
     variants: Vec<Variant>,
 }
 
-macro_rules! monitor_recipe {
-    ($path:ident, $shared_map:ident, $parser:expr) => {{
-        let mut inotify = Inotify::init()?;
-        let mut buffer = [0; 32];
-        inotify.add_watch($path.as_ref(), WatchMask::CREATE | WatchMask::MODIFY)?;
-        let mut stream = inotify.event_stream(&mut buffer)?;
+#[inline]
+async fn monitor_recipe_inner<
+    'a,
+    Fut: Future<Output = Result<TarballMap>>,
+    F: Fn(&'a Path) -> Fut,
+>(
+    path: &'a Path,
+    shared_map: SharedDistMap,
+    parser: F,
+) -> Result<()> {
+    let mut inotify = Inotify::init()?;
+    let mut buffer = [0; 32];
+    inotify.add_watch(path, WatchMask::CREATE | WatchMask::MODIFY)?;
+    let mut stream = inotify.event_stream(&mut buffer)?;
 
-        loop {
-            match $parser($path.as_ref()).await {
-                Ok(new_map) => {
-                    $shared_map.retain(|k, _| new_map.contains_key(k));
-                    for (k, variant) in new_map.into_iter() {
-                        $shared_map.insert(k, variant);
-                    }
+    loop {
+        match parser(path).await {
+            Ok(new_map) => {
+                shared_map.retain(|k, _| new_map.contains_key(k));
+                for (k, variant) in new_map.into_iter() {
+                    shared_map.insert(k, variant);
                 }
-                Err(err) => error!("Error parsing recipe: {}", err),
             }
-
-            if let Some(_) = stream.next().await {
-                continue;
-            } else {
-                break;
-            }
+            Err(err) => error!("Error parsing recipe: {}", err),
         }
-    }};
+
+        if stream.next().await.is_some() {
+            continue;
+        } else {
+            break;
+        }
+    }
+
+    Ok(())
 }
 
 #[inline]
@@ -70,15 +80,11 @@ fn get_variant_id(description: &str) -> Option<&str> {
 }
 
 pub async fn monitor_recipe<P: AsRef<Path>>(path: P, shared_map: SharedDistMap) -> Result<()> {
-    monitor_recipe!(path, shared_map, parse_recipe);
-
-    Ok(())
+    monitor_recipe_inner(path.as_ref(), shared_map, parse_recipe).await
 }
 
 pub async fn monitor_livekit<P: AsRef<Path>>(path: P, shared_map: SharedDistMap) -> Result<()> {
-    monitor_recipe!(path, shared_map, parse_livekit);
-
-    Ok(())
+    monitor_recipe_inner(path.as_ref(), shared_map, parse_livekit).await
 }
 
 pub async fn parse_livekit<P: AsRef<Path>>(path: P) -> Result<TarballMap> {
