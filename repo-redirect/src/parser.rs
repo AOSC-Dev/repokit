@@ -48,7 +48,10 @@ async fn monitor_recipe_inner<
 ) -> Result<()> {
     let mut inotify = Inotify::init()?;
     let mut buffer = [0; 32];
-    inotify.add_watch(path, WatchMask::CREATE | WatchMask::MODIFY)?;
+    inotify.add_watch(
+        path,
+        WatchMask::CREATE | WatchMask::MODIFY | WatchMask::CLOSE_WRITE,
+    )?;
     let mut stream = inotify.event_stream(&mut buffer)?;
 
     loop {
