@@ -9,7 +9,10 @@ use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
 use teloxide::{
-    payloads::SendMessageSetters, prelude::*, types::{ParseMode, ChatId}, utils::command::BotCommands,
+    payloads::SendMessageSetters,
+    prelude::*,
+    types::{ChatId, ParseMode},
+    utils::command::BotCommands,
     RequestError,
 };
 use tokio::time::sleep;
@@ -354,7 +357,10 @@ async fn answer(
 ) -> Result<()> {
     let id = message.chat.id;
     match command {
-        Command::Help => bot.send_message(id, Command::descriptions().to_string()).await?,
+        Command::Help => {
+            bot.send_message(id, Command::descriptions().to_string())
+                .await?
+        }
         Command::Start => {
             query!("INSERT OR IGNORE INTO subbed (chat_id) VALUES (?)", id.0)
                 .execute(&pool)
