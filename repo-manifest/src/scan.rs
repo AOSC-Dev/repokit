@@ -227,17 +227,10 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
             }
         );
         let inst_size: i64 = real_size.try_into().unwrap();
-        let pos = unwrap_or_show_error!(
-            "Could not ftell() {}: {}",
-            p.display(),
-            f.seek(SeekFrom::Current(0))
-        );
+        let pos =
+            unwrap_or_show_error!("Could not ftell() {}: {}", p.display(), f.stream_position());
         let download_size: i64 = pos.try_into().unwrap();
-        unwrap_or_show_error!(
-            "Could not seek() {}: {}",
-            p.display(),
-            f.seek(SeekFrom::Start(0))
-        );
+        unwrap_or_show_error!("Could not seek() {}: {}", p.display(), f.rewind());
         let sha256sum = unwrap_or_show_error!(
             "Could not update sha256sum of {}: {}",
             p.display(),

@@ -161,7 +161,7 @@ fn sort_pending_messages_chunk(pending: &mut Vec<PVMessage>) -> EntryMapping {
     let mut remaining = LIST_MAX_LENGTH;
     let mut list_remaining = LIST_MAX_SIZE;
     mapping.reserve(LIST_MAX_SIZE);
-    pending.sort_unstable_by(|a, b| method_to_priority(a).cmp(&method_to_priority(b)));
+    pending.sort_unstable_by_key(method_to_priority);
     while !pending.is_empty() && remaining > 0 && list_remaining > 0 {
         let p = pending.pop();
         if p.is_none() {
