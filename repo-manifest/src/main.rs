@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use log::{error, info, warn};
 use std::{
-    fs::{create_dir_all, read, write},
+    fs::{create_dir_all, read, read_to_string, write},
     path::Path,
     process,
 };
@@ -24,7 +24,7 @@ fn main() {
     let matches = Args::parse();
     let config = &matches.config;
     info!("Reading config from {}...", config);
-    let config_data = read(config);
+    let config_data = read_to_string(config);
     if let Err(e) = config_data {
         error!("Could not read the config file {}: {}", config, e);
         process::exit(1);

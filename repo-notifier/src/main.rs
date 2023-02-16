@@ -4,13 +4,13 @@ use anyhow::{anyhow, Result};
 use defaultmap::DefaultHashMap;
 use futures_util::StreamExt;
 use inotify::{Inotify, WatchMask};
-use lazy_static::lazy_static;
 use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
 use teloxide::{
     payloads::SendMessageSetters,
     prelude::*,
+    respond,
     types::{ChatId, ParseMode},
     utils::command::BotCommands,
     RequestError,
@@ -24,11 +24,9 @@ const COOLDOWN_TIME: usize = 20usize;
 
 type EntryMapping = DefaultHashMap<String, Vec<String>>;
 
-lazy_static! {
-    static ref UPDATED: AtomicBool = AtomicBool::new(false);
-    static ref MSGSENT: AtomicBool = AtomicBool::new(false);
-    static ref WRITTEN: AtomicBool = AtomicBool::new(false);
-}
+static UPDATED: AtomicBool = AtomicBool::new(false);
+static MSGSENT: AtomicBool = AtomicBool::new(false);
+static WRITTEN: AtomicBool = AtomicBool::new(false);
 
 macro_rules! send_to_subscribers {
     ($c:expr, $bot:ident, $subs:ident) => {
@@ -41,7 +39,10 @@ macro_rules! send_to_subscribers {
 }
 
 #[derive(BotCommands, Clone)]
-#[command(rename = "lowercase", description = "These commands are supported:")]
+#[command(
+    rename_rule = "lowercase",
+    description = "These commands are supported:"
+)]
 enum Command {
     #[command(description = "display this text.")]
     Help,
@@ -190,7 +191,7 @@ fn format_sorted_mapping(mapping: EntryMapping) -> String {
 }
 
 #[inline]
-async fn send_with_retry(msg: &str, bot: &AutoSend<Bot>, chat_id: i64) -> Result<()> {
+async fn send_with_retry(msg: &str, bot: &Bot, chat_id: i64) -> Result<()> {
     let mut retries = 5usize;
     let mut chat_id = ChatId(chat_id);
     while retries > 0 {
@@ -225,7 +226,7 @@ async fn send_with_retry(msg: &str, bot: &AutoSend<Bot>, chat_id: i64) -> Result
 /// Send all the pending messages to the subscribers
 async fn send_all_pending_messages(
     pending: &mut Vec<PVMessage>,
-    bot: &AutoSend<Bot>,
+    bot: &Bot,
     db: &sqlite::SqlitePool,
 ) -> Result<()> {
     if pending.is_empty() {
@@ -268,7 +269,7 @@ async fn parse_message(
 /// Monitor the ZMQ endpoint of p-vector
 async fn monitor_pv(
     sock: zmq::Socket,
-    bot: &AutoSend<Bot>,
+    bot: &Bot,
     db: &sqlite::SqlitePool,
     new_protocol: bool,
 ) -> Result<()> {
@@ -331,7 +332,7 @@ async fn monitor_pv(
 }
 
 /// Monitor the `last_update` file
-async fn monitor_last_update(f: &str, _: &AutoSend<Bot>, _: &sqlite::SqlitePool) -> Result<()> {
+async fn monitor_last_update(f: &str, _: &Bot, _: &sqlite::SqlitePool) -> Result<()> {
     let mut inotify = Inotify::init()?;
     let mut buffer = [0; 32];
     inotify.add_watch(f, WatchMask::CREATE | WatchMask::MODIFY)?;
@@ -350,7 +351,7 @@ async fn monitor_last_update(f: &str, _: &AutoSend<Bot>, _: &sqlite::SqlitePool)
 
 /// Handle bot commands from Telegram
 async fn answer(
-    bot: AutoSend<Bot>,
+    bot: Bot,
     message: Message,
     command: Command,
     pool: sqlite::SqlitePool,
@@ -391,17 +392,19 @@ async fn run() -> Result<()> {
 
     let rx = connect_zmq(&zmq_addr).expect("Unable to connect to zmq endpoint!");
     log::info!("ZMQ connected.");
-    let bot = Bot::from_env().auto_send();
+    let bot = Bot::from_env();
     log::info!("Bot connected.");
-    let pool_clone = pool.clone();
     tokio::try_join!(
         async {
-            teloxide::commands_repl(
+            teloxide::repl(
                 bot.clone(),
-                move |cx, msg, cmd| answer(cx, msg, cmd, pool_clone.clone()),
-                Command::ty(),
-            )
-            .await;
+                move |bot: Bot, msg: Message, cmd: Command, pool_clone: sqlite::SqlitePool| async move {
+                    if let Err(e) = answer(bot, msg, cmd, pool_clone.clone()).await {
+                        log::error!("An error occurred while replying to the user: {}", e);
+                    }
+                    respond(())
+                },
+            ).await;
             Ok(())
         },
         monitor_pv(rx, &bot, &pool, new_protocol),

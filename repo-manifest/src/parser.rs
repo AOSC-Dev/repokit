@@ -112,8 +112,8 @@ impl Variant {
 }
 
 #[inline]
-pub fn parse_config(data: &[u8]) -> Result<UserConfig> {
-    Ok(toml::from_slice(data)?)
+pub fn parse_config(data: &str) -> Result<UserConfig> {
+    Ok(toml::from_str(data)?)
 }
 
 pub fn parse_manifest(data: &[u8]) -> Result<Recipe> {
