@@ -15,4 +15,4 @@ walkdir = "2.3"
 argh = "0.1"
 env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }
 nom = "^7"
-attohttpc = { version = "0.24", features = ["json"] }
+attohttpc = { version = "0.25", features = ["json"] }
