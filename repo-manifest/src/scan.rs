@@ -3,7 +3,7 @@ use crate::parser::{
     UserConfig,
 };
 use anyhow::{anyhow, Result};
-use backhand::FilesystemReader;
+use backhand::Squashfs as BackHandSquashfs;
 use log::{error, info, warn};
 use parking_lot::Mutex;
 use rayon::prelude::*;
@@ -83,25 +83,12 @@ pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
 }
 
 /// Calculate the decompressed size of the given tarball
-pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path, is_squashfs: bool) -> Result<u64> {
+pub fn calculate_tarball_decompressed_size<R: Read + Seek>(mut reader: R) -> Result<u64> {
     reader
         .seek(SeekFrom::Start(0))
         .map_err(|e| anyhow!("Could not seek {}", e))?;
 
-    let size = if is_squashfs {
-        let archive = BufReader::new(std::fs::File::open(archive)?);
-        let reader = FilesystemReader::from_reader(archive)?;
-        let mut size = 0;
-
-        for node in reader.files() {
-            match &node.inner {
-                backhand::InnerNode::File(f) => size += f.basic.file_size,
-                _ => continue,
-            }
-        }
-
-        size.into()
-    } else {
+    let size = {
         let mut buffer = [0u8; 4096];
         let mut decompress = XzDecoder::new(reader);
 
@@ -116,6 +103,25 @@ pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path
     };
 
     Ok(size)
+}
+
+pub fn calculate_squashfs_size_and_inode(archive: &Path) -> Result<(u64, u32)> {
+    let archive = BufReader::new(std::fs::File::open(archive)?);
+    let squashfs = BackHandSquashfs::from_reader(archive)?;
+    let inodes = squashfs.superblock.inode_count;
+    let reader = squashfs.into_filesystem_reader()?;
+    let mut size = 0;
+
+    for node in reader.files() {
+        match &node.inner {
+            backhand::InnerNode::File(f) => {
+                size += f.basic.file_size;
+            }
+            _ => continue,
+        }
+    }
+
+    Ok((size.into(), inodes))
 }
 
 fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
@@ -202,8 +208,7 @@ pub fn increment_scan_files(
             .any(|t| root_path_buf.join(&t.path) == file)
         {
             new_files_tbl.push(file);
-        }
-        else if !new_existing_sq
+        } else if !new_existing_sq
             .iter()
             .any(|t| root_path_buf.join(&t.path) == file)
         {
@@ -309,16 +314,34 @@ pub fn scan_files(
 
         let is_squashfs = buffer == b"hsqs"[..];
 
-        let real_size = unwrap_or_show_error!(
-            "Could not read file as stream {}: {}",
-            p.display(),
-            if raw {
-                f.seek(SeekFrom::End(0))
-                    .map_err(|e| anyhow!("Could not seek {}", e))
-            } else {
-                calculate_decompressed_size(&f, p, is_squashfs)
-            }
-        );
+        let (real_size, inode) = if raw {
+            (
+                unwrap_or_show_error!(
+                    "Could not read file as stream {}: {}",
+                    p.display(),
+                    f.seek(SeekFrom::End(0))
+                        .map_err(|e| anyhow!("Could not seek {}", e))
+                ),
+                None,
+            )
+        } else if is_squashfs {
+            let (size, inode) = unwrap_or_show_error!(
+                "Could not read file as stream {}: {}",
+                p.display(),
+                calculate_squashfs_size_and_inode(p)
+            );
+
+            (size, Some(inode))
+        } else {
+            let size = unwrap_or_show_error!(
+                "Could not read file as stream {}: {}",
+                p.display(),
+                calculate_tarball_decompressed_size(&f)
+            );
+
+            (size, None)
+        };
+
         let inst_size: i64 = real_size.try_into().unwrap();
         let f_metadata =
             unwrap_or_show_error!("Could not read metadata {}: {}", p.display(), f.metadata());
@@ -345,6 +368,7 @@ pub fn scan_files(
                 inst_size,
                 path: path.to_string_lossy().to_string(),
                 sha256sum,
+                inodes: inode.unwrap(),
             })
         } else {
             results.push(Tarball {

@@ -41,6 +41,7 @@ pub struct SquashFs {
     pub inst_size: i64,
     pub path: String,
     pub sha256sum: String,
+    pub inodes: u32,
 }
 #[derive(Serialize, Deserialize)]
 pub struct Variant {
@@ -158,7 +159,10 @@ pub fn generate_manifest(manifest: &Recipe) -> Result<String> {
     Ok(serde_json::to_string(manifest)?)
 }
 
-pub fn assemble_variants(config: &UserConfig, files: (Vec<Tarball>, Vec<SquashFs>)) -> Vec<Variant> {
+pub fn assemble_variants(
+    config: &UserConfig,
+    files: (Vec<Tarball>, Vec<SquashFs>),
+) -> Vec<Variant> {
     let mut variants: HashMap<String, Variant> = HashMap::new();
     let mut variants_r: HashMap<String, Variant> = HashMap::new();
     let mut results = Vec::new();
@@ -190,9 +194,8 @@ pub fn assemble_variants(config: &UserConfig, files: (Vec<Tarball>, Vec<SquashFs
     }
     let retro_arches = &config.config.retro_arches;
     for file in files.0 {
-        let v;
-        if retro_arches.contains(&file.arch) {
-            v = variants_r.get_mut(&file.variant);
+        let v = if retro_arches.contains(&file.arch) {
+            variants_r.get_mut(&file.variant)
         } else {
             variants.get_mut(&file.variant)
         };
@@ -203,12 +206,11 @@ pub fn assemble_variants(config: &UserConfig, files: (Vec<Tarball>, Vec<SquashFs
         }
     }
     for file in files.1 {
-        let v;
-        if retro_arches.contains(&file.arch) {
-            v = variants_r.get_mut(&file.variant);
+        let v = if retro_arches.contains(&file.arch) {
+            variants_r.get_mut(&file.variant)
         } else {
-            v = variants.get_mut(&file.variant);
-        }
+            variants.get_mut(&file.variant)
+        };
         if let Some(v) = v {
             v.squashfs.push(file);
         } else {
