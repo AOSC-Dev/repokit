@@ -1,5 +1,6 @@
 use crate::parser::{
-    flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, Tarball, UserConfig,
+    flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, SquashFs, Tarball,
+    UserConfig,
 };
 use anyhow::{anyhow, Result};
 use backhand::FilesystemReader;
@@ -82,18 +83,12 @@ pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
 }
 
 /// Calculate the decompressed size of the given tarball
-pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path) -> Result<u64> {
-    let mut buffer = [0u8; 4];
-    let size = reader.read(&mut buffer)?;
-    if size != 4 {
-        return Err(anyhow!("File too small!"));
-    }
-
+pub fn calculate_decompressed_size<R: Read + Seek>(mut reader: R, archive: &Path, is_squashfs: bool) -> Result<u64> {
     reader
         .seek(SeekFrom::Start(0))
         .map_err(|e| anyhow!("Could not seek {}", e))?;
 
-    let size = if buffer == b"hsqs"[..] {
+    let size = if is_squashfs {
         let archive = BufReader::new(std::fs::File::open(archive)?);
         let reader = FilesystemReader::from_reader(archive)?;
         let mut size = 0;
@@ -152,41 +147,75 @@ pub fn collect_iso<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
 
 pub fn increment_scan_files(
     files: Vec<PathBuf>,
-    existing_files: Vec<Tarball>,
+    existing_files_tbl: Vec<Tarball>,
+    existing_files_sq: Vec<SquashFs>,
     root_path: &str,
     raw: bool,
-) -> Result<Vec<Tarball>> {
+) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
     let root_path_buf = PathBuf::from(root_path);
-    let mut new_existing_files: Vec<Tarball> = Vec::new();
-    let mut new_files: Vec<PathBuf> = Vec::new();
-    new_existing_files.reserve(existing_files.len());
-    new_files.reserve(files.len());
-    for mut tarball in existing_files {
+    let mut new_existing_tarballs: Vec<Tarball> = Vec::new();
+    let mut new_existing_sq: Vec<SquashFs> = Vec::new();
+    let mut new_files_tbl: Vec<PathBuf> = Vec::new();
+    let mut new_files_sq: Vec<PathBuf> = Vec::new();
+    new_existing_tarballs.reserve(existing_files_tbl.len());
+    new_existing_sq.reserve(existing_files_sq.len());
+
+    let new_file_sq_len = files
+        .iter()
+        .filter(|x| x.extension().and_then(|x| x.to_str()) == Some("squashfs"))
+        .collect::<Vec<_>>()
+        .len();
+
+    let new_files_tbl_len = files.len() - new_file_sq_len;
+
+    new_files_tbl.reserve(new_file_sq_len);
+    new_files_sq.reserve(new_files_tbl_len);
+    for mut tarball in existing_files_tbl {
         let path = root_path_buf.join(&tarball.path);
         if files.contains(&path) {
             if let Some(filename) = PathBuf::from(&tarball.path).file_name() {
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
                     tarball.variant = names.0;
-                    new_existing_files.push(tarball);
+                    new_existing_tarballs.push(tarball);
                     continue;
                 }
             }
             warn!("Unable to determine the variant for {}", tarball.path);
         }
     }
+    for mut sq in existing_files_sq {
+        let path = root_path_buf.join(&sq.path);
+        if files.contains(&path) {
+            if let Some(filename) = PathBuf::from(&sq.path).file_name() {
+                if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
+                    sq.variant = names.0;
+                    new_existing_sq.push(sq);
+                    continue;
+                }
+            }
+            warn!("Unable to determine the variant for {}", sq.path);
+        }
+    }
     for file in files {
-        if !new_existing_files
+        if !new_existing_tarballs
             .iter()
             .any(|t| root_path_buf.join(&t.path) == file)
         {
-            new_files.push(file);
+            new_files_tbl.push(file);
+        }
+        else if !new_existing_sq
+            .iter()
+            .any(|t| root_path_buf.join(&t.path) == file)
+        {
+            new_files_sq.push(file);
         }
     }
-    info!("Incrementally scanning {} tarballs...", new_files.len());
-    let diff_files = scan_files(&new_files, root_path, raw)?;
-    new_existing_files.extend(diff_files);
+    info!("Incrementally scanning {} tarballs...", new_files_tbl.len());
+    let (diff_files_tbl, diff_files_sq) = scan_files(&new_files_tbl, root_path, raw)?;
+    new_existing_tarballs.extend(diff_files_tbl);
+    new_existing_sq.extend(diff_files_sq);
 
-    Ok(new_existing_files)
+    Ok((new_existing_tarballs, new_existing_sq))
 }
 
 /// Filter all the files that do not exist in the configuration file
@@ -226,7 +255,7 @@ pub fn smart_scan_files(
     config: &UserConfig,
     files: Vec<PathBuf>,
     root_path: &str,
-) -> Result<Vec<Tarball>> {
+) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
     let files = filter_files(files, config);
     let manifest = parse_manifest(&manifest);
     if let Err(e) = manifest {
@@ -238,12 +267,18 @@ pub fn smart_scan_files(
     let manifest = manifest.unwrap();
     let existing_files = flatten_variants(manifest);
 
-    increment_scan_files(files, existing_files, root_path, false)
+    increment_scan_files(files, existing_files.0, existing_files.1, root_path, false)
 }
 
-pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<Tarball>> {
+pub fn scan_files(
+    files: &[PathBuf],
+    root_path: &str,
+    raw: bool,
+) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
     let results: Vec<Tarball> = Vec::new();
+    let squashfs_results = Vec::new();
     let results_shared = Arc::new(Mutex::new(results));
+    let sq_results_shared = Arc::new(Mutex::new(squashfs_results));
     files.par_iter().for_each(|p| {
         info!("Scanning {}...", p.display());
         let rel_path = p.strip_prefix(root_path);
@@ -264,6 +299,16 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
                 .ok_or_else(|| anyhow!("None value found"))
         );
         let mut f = unwrap_or_show_error!("Could not open {}: {}", p.display(), File::open(p));
+
+        let mut buffer = [0u8; 4];
+        let size = unwrap_or_show_error!("Could not open {}: {}", p.display(), f.read(&mut buffer));
+        if size != 4 {
+            error!("File size to small: {}", p.display());
+            return;
+        }
+
+        let is_squashfs = buffer == b"hsqs"[..];
+
         let real_size = unwrap_or_show_error!(
             "Could not read file as stream {}: {}",
             p.display(),
@@ -271,7 +316,7 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
                 f.seek(SeekFrom::End(0))
                     .map_err(|e| anyhow!("Could not seek {}", e))
             } else {
-                calculate_decompressed_size(&f, p)
+                calculate_decompressed_size(&f, p, is_squashfs)
             }
         );
         let inst_size: i64 = real_size.try_into().unwrap();
@@ -290,16 +335,32 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
             sha256sum(&f)
         );
         let mut results = results_shared.lock();
-        results.push(Tarball {
-            arch: names.2,
-            date: names.1,
-            variant: names.0,
-            download_size,
-            inst_size,
-            path: path.to_string_lossy().to_string(),
-            sha256sum,
-        });
+        let mut squashfs_results = sq_results_shared.lock();
+        if is_squashfs {
+            squashfs_results.push(SquashFs {
+                arch: names.2,
+                date: names.1,
+                variant: names.0,
+                download_size,
+                inst_size,
+                path: path.to_string_lossy().to_string(),
+                sha256sum,
+            })
+        } else {
+            results.push(Tarball {
+                arch: names.2,
+                date: names.1,
+                variant: names.0,
+                download_size,
+                inst_size,
+                path: path.to_string_lossy().to_string(),
+                sha256sum,
+            });
+        }
     });
 
-    Ok(Arc::try_unwrap(results_shared).unwrap().into_inner())
+    Ok((
+        Arc::try_unwrap(results_shared).unwrap().into_inner(),
+        Arc::try_unwrap(sq_results_shared).unwrap().into_inner(),
+    ))
 }

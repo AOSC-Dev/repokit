@@ -7,6 +7,8 @@ use std::{
     process,
 };
 
+use crate::parser::{SquashFs, Tarball};
+
 mod parser;
 mod scan;
 
@@ -77,9 +79,9 @@ fn scan_images(root_path: &str) -> Result<String> {
         info!("Scanning {} images...", files.len());
         scan::scan_files(&files, root_path, true)?
     } else {
-        let existing_files: Vec<parser::Tarball> =
+        let existing_files: (Vec<Tarball>, Vec<SquashFs>) =
             serde_json::from_slice(previous_manifest.as_ref().unwrap())?;
-        scan::increment_scan_files(files, existing_files, root_path, true)?
+        scan::increment_scan_files(files, existing_files.0, existing_files.1, root_path, true)?
     };
     info!("Generating manifest...");
 

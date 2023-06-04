@@ -29,6 +29,19 @@ pub struct Tarball {
     pub sha256sum: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SquashFs {
+    pub arch: String,
+    pub date: String,
+    #[serde(skip)]
+    pub variant: String,
+    #[serde(rename = "downloadSize")]
+    pub download_size: i64,
+    #[serde(rename = "instSize")]
+    pub inst_size: i64,
+    pub path: String,
+    pub sha256sum: String,
+}
 #[derive(Serialize, Deserialize)]
 pub struct Variant {
     name: String,
@@ -37,6 +50,7 @@ pub struct Variant {
     #[serde(rename = "description-tr")]
     description_tr: String,
     tarballs: Vec<Tarball>,
+    squashfs: Vec<SquashFs>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -100,6 +114,7 @@ impl Variant {
         description: String,
         retro: bool,
         tarballs: Vec<Tarball>,
+        squashfs: Vec<SquashFs>,
     ) -> Self {
         Variant {
             name,
@@ -107,6 +122,7 @@ impl Variant {
             description,
             description_tr: format!("{}{}-description", key, if retro { "-retro" } else { "" }),
             tarballs,
+            squashfs,
         }
     }
 }
@@ -120,13 +136,14 @@ pub fn parse_manifest(data: &[u8]) -> Result<Recipe> {
     Ok(serde_json::from_slice(data)?)
 }
 
-pub fn flatten_variants(recipe: Recipe) -> Vec<Tarball> {
-    let mut results = Vec::new();
+pub fn flatten_variants(recipe: Recipe) -> (Vec<Tarball>, Vec<SquashFs>) {
+    let (mut results, mut results_sq) = (Vec::new(), Vec::new());
     for variant in recipe.variants {
         results.extend(variant.tarballs);
+        results_sq.extend(variant.squashfs);
     }
 
-    results
+    (results, results_sq)
 }
 
 pub fn get_root_path(config: &UserConfig) -> String {
@@ -141,7 +158,7 @@ pub fn generate_manifest(manifest: &Recipe) -> Result<String> {
     Ok(serde_json::to_string(manifest)?)
 }
 
-pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Variant> {
+pub fn assemble_variants(config: &UserConfig, files: (Vec<Tarball>, Vec<SquashFs>)) -> Vec<Variant> {
     let mut variants: HashMap<String, Variant> = HashMap::new();
     let mut variants_r: HashMap<String, Variant> = HashMap::new();
     let mut results = Vec::new();
@@ -153,6 +170,7 @@ pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Varian
                 k.to_owned(),
                 v.description.to_owned(),
                 false,
+                Vec::new(),
                 Vec::new(),
             ),
         );
@@ -166,18 +184,33 @@ pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Varian
                 v.description.to_owned(),
                 true,
                 Vec::new(),
+                Vec::new(),
             ),
         );
     }
     let retro_arches = &config.config.retro_arches;
-    for file in files {
-        let v = if retro_arches.contains(&file.arch) {
-            variants_r.get_mut(&file.variant)
+    for file in files.0 {
+        let v;
+        if retro_arches.contains(&file.arch) {
+            v = variants_r.get_mut(&file.variant);
         } else {
             variants.get_mut(&file.variant)
         };
         if let Some(v) = v {
             v.tarballs.push(file);
+        } else {
+            warn!("The variant `{}` is not in the config file.", file.variant);
+        }
+    }
+    for file in files.1 {
+        let v;
+        if retro_arches.contains(&file.arch) {
+            v = variants_r.get_mut(&file.variant);
+        } else {
+            v = variants.get_mut(&file.variant);
+        }
+        if let Some(v) = v {
+            v.squashfs.push(file);
         } else {
             warn!("The variant `{}` is not in the config file.", file.variant);
         }
