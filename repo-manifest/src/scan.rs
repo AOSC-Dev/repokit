@@ -3,12 +3,13 @@ use crate::parser::{
     UserConfig,
 };
 use anyhow::{anyhow, Result};
-use backhand::Squashfs as BackHandSquashfs;
+// use backhand::Squashfs as BackHandSquashfs;
 use log::{error, info, warn};
 use parking_lot::Mutex;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
-use std::io::BufReader;
+use squashfs_ng::read::{Archive as SquashfsArchive, Node as SquashfsNode};
+// use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::{
     convert::TryInto,
@@ -106,22 +107,28 @@ pub fn calculate_tarball_decompressed_size<R: Read + Seek>(mut reader: R) -> Res
 }
 
 pub fn calculate_squashfs_size_and_inode(archive: &Path) -> Result<(u64, u32)> {
-    let archive = BufReader::new(std::fs::File::open(archive)?);
-    let squashfs = BackHandSquashfs::from_reader(archive)?;
-    let inodes = squashfs.superblock.inode_count;
-    let reader = squashfs.into_filesystem_reader()?;
-    let mut size = 0;
+    let sq = SquashfsArchive::new(archive)?;
+    let inodes = sq.size();
 
-    for node in reader.files() {
-        match &node.inner {
-            backhand::InnerNode::File(f) => {
-                size += f.basic.file_size;
-            }
-            _ => continue,
+    let dir = sq
+        .get("/")?
+        .ok_or_else(|| anyhow!("Could not get root directory: {}", archive.display()))?;
+
+    let size = add_size(dir, 0)?;
+
+    Ok((size, inodes))
+}
+
+fn add_size(node: SquashfsNode, mut size: u64) -> Result<u64> {
+    if let Ok(dir) = node.as_dir() {
+        for node in dir {
+            size = add_size(node?, size)?;
         }
+    } else if let Ok(f) = node.as_file() {
+        size += f.size();
     }
 
-    Ok((size.into(), inodes))
+    Ok(size)
 }
 
 fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
