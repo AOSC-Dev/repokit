@@ -114,21 +114,31 @@ pub fn calculate_squashfs_size_and_inode(archive: &Path) -> Result<(u64, u32)> {
         .get("/")?
         .ok_or_else(|| anyhow!("Could not get root directory: {}", archive.display()))?;
 
-    let size = add_size(dir, 0)?;
+    let size = add_size(dir)?;
 
     Ok((size, inodes))
 }
 
-fn add_size(node: SquashfsNode, mut size: u64) -> Result<u64> {
-    if let Ok(dir) = node.as_dir() {
-        for node in dir {
-            size = add_size(node?, size)?;
+fn add_size(root_node: SquashfsNode) -> Result<u64> {
+    let root_dir = root_node.into_owned_dir()?;
+
+    let mut stack = Vec::with_capacity(1024);
+    let mut total = 0u64;
+
+    stack.push(root_dir);
+
+    while let Some(dir) = stack.pop() {
+        for entry in dir {
+            let entry = entry?;
+            if let Ok(dir) = entry.clone().into_owned_dir() {
+                stack.push(dir);
+            } else if let Ok(file) = entry.as_file() {
+                total += file.size();
+            }
         }
-    } else if let Ok(f) = node.as_file() {
-        size += f.size();
     }
 
-    Ok(size)
+    Ok(total)
 }
 
 fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
