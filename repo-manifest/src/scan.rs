@@ -130,10 +130,10 @@ fn add_size(root_node: SquashfsNode) -> Result<u64> {
     while let Some(dir) = stack.pop() {
         for entry in dir {
             let entry = entry?;
-            if let Ok(dir) = entry.clone().into_owned_dir() {
-                stack.push(dir);
-            } else if let Ok(file) = entry.as_file() {
+            if let Ok(file) = entry.as_file() {
                 total += file.size();
+            } else if let Ok(d) = entry.into_owned_dir() {
+                stack.push(d);
             }
         }
     }
