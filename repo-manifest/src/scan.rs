@@ -132,8 +132,10 @@ fn add_size(root_node: SquashfsNode) -> Result<u64> {
             let entry = entry?;
             if let Ok(file) = entry.as_file() {
                 total += file.size();
-            } else if let Ok(d) = entry.into_owned_dir() {
-                stack.push(d);
+            } else if entry.is_dir().unwrap_or(false) {
+                if let Ok(d) = entry.into_owned_dir() {
+                    stack.push(d);
+                }
             }
         }
     }
