@@ -77,11 +77,11 @@ fn scan_images(root_path: &str) -> Result<String> {
         warn!("Failed to read the previous manifest: {}", e);
         warn!("Falling back to full scan!");
         info!("Scanning {} images...", files.len());
-        scan::scan_files(&files, root_path, true)?
+        scan::scan_files(&files, root_path, true)?.0
     } else {
         let existing_files: Vec<Tarball> =
             serde_json::from_slice(previous_manifest.as_ref().unwrap())?;
-        scan::increment_scan_files(files, existing_files, Vec::new(), root_path, true)?
+        scan::increment_scan_files(files, existing_files, Vec::new(), root_path, true)?.0
     };
     info!("Generating manifest...");
 
