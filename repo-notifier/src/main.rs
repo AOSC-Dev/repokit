@@ -333,10 +333,12 @@ async fn monitor_pv(
 
 /// Monitor the `last_update` file
 async fn monitor_last_update(f: &str, _: &Bot, _: &sqlite::SqlitePool) -> Result<()> {
-    let mut inotify = Inotify::init()?;
-    let mut buffer = [0; 32];
-    inotify.add_watch(f, WatchMask::CREATE | WatchMask::MODIFY)?;
-    let mut stream = inotify.event_stream(&mut buffer)?;
+    let inotify = Inotify::init()?;
+    let buffer = [0; 32];
+    inotify
+        .watches()
+        .add(f, WatchMask::CREATE | WatchMask::MODIFY)?;
+    let mut stream = inotify.into_event_stream(buffer)?;
     log::info!("Last update file monitoring started.");
     while stream.next().await.is_some() {
         // Only sends this notification if there are package updates

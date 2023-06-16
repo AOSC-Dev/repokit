@@ -46,13 +46,13 @@ async fn monitor_recipe_inner<
     shared_map: SharedDistMap,
     parser: F,
 ) -> Result<()> {
-    let mut inotify = Inotify::init()?;
-    let mut buffer = [0; 32];
-    inotify.add_watch(
+    let inotify = Inotify::init()?;
+    let buffer = [0; 32];
+    inotify.watches().add(
         path,
         WatchMask::CREATE | WatchMask::MODIFY | WatchMask::CLOSE_WRITE,
     )?;
-    let mut stream = inotify.event_stream(&mut buffer)?;
+    let mut stream = inotify.into_event_stream(buffer)?;
 
     loop {
         match parser(path).await {
