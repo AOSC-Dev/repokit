@@ -153,7 +153,7 @@ fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
             if entry.file_type().is_dir() || !filter(&entry) {
                 continue;
             }
-            files.push(entry.into_path());
+            files.push(entry.into_path().canonicalize()?);
         } else if let Err(e) = entry {
             error!("Could not stat() the entry: {}", e);
         }
@@ -227,25 +227,32 @@ pub fn increment_scan_files(
             warn!("Unable to determine the variant for {}", sq.path);
         }
     }
+
     for file in files {
-        if !new_existing_tarballs
+        let ext = file.extension().and_then(|x| x.to_str());
+
+        if ext == Some("squashfs") {
+            if !new_existing_sq
+                .iter()
+                .any(|t| root_path_buf.join(&t.path) == file)
+            {
+                new_files_sq.push(file);
+            }
+        } else if !new_existing_tarballs
             .iter()
             .any(|t| root_path_buf.join(&t.path) == file)
         {
-            new_files_tbl.push(file);
-        } else if !new_existing_sq
-            .iter()
-            .any(|t| root_path_buf.join(&t.path) == file)
-        {
-            new_files_sq.push(file);
+            new_files_tbl.push(file.clone());
         }
     }
+
     info!("Incrementally scanning {} tarballs...", new_files_tbl.len());
     info!("Incrementally scanning {} squashfs...", new_files_sq.len());
     let files = new_files_tbl
         .into_iter()
         .chain(new_files_sq)
         .collect::<Vec<_>>();
+
     let (diff_files_tbl, diff_files_sq) = scan_files(&files, root_path, raw)?;
     new_existing_tarballs.extend(diff_files_tbl);
     new_existing_sq.extend(diff_files_sq);
