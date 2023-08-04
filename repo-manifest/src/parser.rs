@@ -245,7 +245,7 @@ pub fn get_splitted_name(name: &str) -> Option<(String, String, String, String)>
     splitted.next()?;
     let variant = splitted.next()?;
     let date = splitted.next()?;
-    let mut rest = splitted.next()?.split_once('.')?;
+    let rest = splitted.next()?.split_once('.')?;
     let arch = rest.0;
     let rootfs_type = rest.1.to_string();
 
