@@ -202,7 +202,7 @@ pub fn increment_scan_files(
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
                     tarball.variant = names.0;
                     match names.3.as_str() {
-                        x if x.starts_with("tar") => new_existing_tarballs.push(tarball),
+                        x if x.starts_with("tar.") => new_existing_tarballs.push(tarball),
                         _ => continue,
                     }
                     continue;
@@ -241,6 +241,7 @@ pub fn increment_scan_files(
         } else if !new_existing_tarballs
             .iter()
             .any(|t| root_path_buf.join(&t.path) == file)
+            && ext.filter(|x| x.starts_with("tar.")).is_some()
         {
             new_files_tbl.push(file.clone());
         }
