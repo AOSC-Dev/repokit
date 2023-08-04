@@ -201,7 +201,10 @@ pub fn increment_scan_files(
             if let Some(filename) = PathBuf::from(&tarball.path).file_name() {
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
                     tarball.variant = names.0;
-                    new_existing_tarballs.push(tarball);
+                    match names.3.as_str() {
+                        x if x.starts_with("tar") => new_existing_tarballs.push(tarball),
+                        _ => continue,
+                    }
                     continue;
                 }
             }
@@ -214,7 +217,10 @@ pub fn increment_scan_files(
             if let Some(filename) = PathBuf::from(&sq.path).file_name() {
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
                     sq.variant = names.0;
-                    new_existing_sq.push(sq);
+                    match names.3.as_str() {
+                        "squashfs" => new_existing_sq.push(sq),
+                        _ => continue,
+                    }
                     continue;
                 }
             }
@@ -235,7 +241,12 @@ pub fn increment_scan_files(
         }
     }
     info!("Incrementally scanning {} tarballs...", new_files_tbl.len());
-    let (diff_files_tbl, diff_files_sq) = scan_files(&new_files_tbl, root_path, raw)?;
+    info!("Incrementally scanning {} squashfs...", new_files_sq.len());
+    let files = new_files_tbl
+        .into_iter()
+        .chain(new_files_sq)
+        .collect::<Vec<_>>();
+    let (diff_files_tbl, diff_files_sq) = scan_files(&files, root_path, raw)?;
     new_existing_tarballs.extend(diff_files_tbl);
     new_existing_sq.extend(diff_files_sq);
 

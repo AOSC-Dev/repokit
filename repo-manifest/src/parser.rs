@@ -240,15 +240,21 @@ pub fn assemble_manifest(config: UserConfig, variants: Vec<Variant>) -> Recipe {
 // AOSC OS tarball names have the following pattern:
 // aosc-os_<variant>_<date>_<arch>.<ext>
 // aosc-os_base_20200526_amd64.tar.xz
-pub fn get_splitted_name(name: &str) -> Option<(String, String, String)> {
+pub fn get_splitted_name(name: &str) -> Option<(String, String, String, String)> {
     let mut splitted = name.split('_');
     splitted.next()?;
     let variant = splitted.next()?;
     let date = splitted.next()?;
-    let mut rest = splitted.next()?.split('.');
-    let arch = rest.next()?;
+    let mut rest = splitted.next()?.split_once('.')?;
+    let arch = rest.0;
+    let rootfs_type = rest.1.to_string();
 
-    Some((variant.to_owned(), date.to_owned(), arch.to_owned()))
+    Some((
+        variant.to_owned(),
+        date.to_owned(),
+        arch.to_owned(),
+        rootfs_type,
+    ))
 }
 
 #[test]
@@ -256,6 +262,21 @@ fn test_split_name() {
     let names = get_splitted_name("aosc-os_base_20200526_amd64.tar.xz").unwrap();
     assert_eq!(
         names,
-        ("base".to_owned(), "20200526".to_owned(), "amd64".to_owned())
+        (
+            "base".to_owned(),
+            "20200526".to_owned(),
+            "amd64".to_owned(),
+            "tar.xz".to_owned()
+        )
+    );
+    let names = get_splitted_name("aosc-os_server_20230714_loongarch64.squashfs").unwrap();
+    assert_eq!(
+        names,
+        (
+            "server".to_owned(),
+            "20230714".to_owned(),
+            "loongarch64".to_owned(),
+            "squashfs".to_owned()
+        )
     );
 }
