@@ -158,11 +158,11 @@ name-tr = "server-name"
 description = "Server releases are base system releases with additional tools for hosting remote files and Web contents, providing network routing, and other functions that enriches network access and resources for client devices."
 description-tr = "server-description"
 
-[distro.retro.x11]
-name = "X11"
-name-tr = "retro-x11-name"
-description = "A basic system release bundled with X graphical user interface support. This release contains a basic desktop environment and graphical tools for devices with graphical hardware acceleration."
-description-tr = "retro-x11-description"
+[distro.retro.desktop]
+name = "Desktop"
+name-tr = "retro-desktop-name"
+description = "Full-featured release featuring the Trinity Desktop Environment, a spiritual successor to the venerable KDE 3.5. Experience the pinnacle of meticulous user interface design, still aspired by desktop environments of our day."
+description-tr = "retro-desktop-description"
 
 [distro.retro.base]
 name = "Base"
