@@ -115,13 +115,6 @@ loc = "Hong Kong"
 loc-tr = "koddos-loc"
 
 [[mirrors]]
-name = "OSSPlanet Mirror Server"
-name-tr = "ossplanet-name"
-url = "https://ftp.ubuntu-tw.net/mirror/anthonos/aosc-os/"
-loc = "Taiwan"
-loc-tr = "ossplanet-loc"
-
-[[mirrors]]
 name = "Fastly CDN"
 name-tr = "fastly-name"
 url = "https://aosc-repo.freetls.fastly.net/aosc-os/"
