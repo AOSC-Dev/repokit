@@ -10,60 +10,102 @@ body = "AOSC OS strives to simplify your user experience and improve your day-to
 body-tr = "bulletin-body"
 
 [[mirrors]]
-name = "Tencent OSS Mirror"
-name-tr = "tencent-name"
-url = "https://mirrors.cloud.tencent.com/anthon/aosc-os/"
+name = "Alibaba Cloud Open Source Mirror"
+name-tr = "aliyun-name"
+url = "https://mirrors.aliyun.com/anthon/aosc-os/"
 loc = "China"
-loc-tr = "tencent-loc"
+loc-tr = "aliyun-loc"
 
 [[mirrors]]
-name = "LZUOSS at Lanzhou University"
-name-tr = "lzu-name"
-url = "https://mirror.lzu.edu.cn/anthon/aosc-os/"
-loc = "China"
-loc-tr = "lzu-loc"
-
-[[mirrors]]
-name = "Beijing Foreign Studies University"
+name = "Beijing Foreign Studies University Open Source Mirror"
 name-tr = "bfsu-name"
 url = "https://mirrors.bfsu.edu.cn/anthon/aosc-os/"
 loc = "China"
 loc-tr = "bfsu-loc"
 
 [[mirrors]]
-name = "Tsinghua University (TUNA)"
-name-tr = "tuna-name"
-url = "https://mirrors.tuna.tsinghua.edu.cn/anthon/aosc-os/"
+name = "GeekPie (ShanghaiTech University) Open Source Mirror"
+name-tr = "geekpie-name"
+url = "https://mirrors.shanghaitech.edu.cn/anthon/aosc-os/"
 loc = "China"
-loc-tr = "tuna-loc"
+loc-tr = "geekpie-loc"
 
 [[mirrors]]
-name = "LUG@USTC"
-name-tr = "ustc-name"
-url = "https://mirrors.ustc.edu.cn/anthon/aosc-os/"
+name = "ISCAS Open Source Mirror"
+name-tr = "iscas-name"
+url = "https://mirror.iscas.ac.cn/anthon/aosc-os/"
 loc = "China"
-loc-tr = "ustc-loc"
+loc-tr = "iscas-loc"
 
 [[mirrors]]
-name = "xTom"
-name-tr = "xtom-name"
-url = "https://mirror.xtom.com.hk/anthon/aosc-os/"
-loc = "Hong Kong"
-loc-tr = "xtom-loc"
+name = "Jilin University Open Source Mirror"
+name-tr = "jlu-name"
+url = "http://mirrors.jlu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "jlu-loc"
 
 [[mirrors]]
-name = "University of Tsukuba"
+name = "LZUOSS Open Source Mirror"
+name-tr = "lzu-name"
+url = "https://mirror.lzu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "lzu-loc"
+
+[[mirrors]]
+name = "NJU Mirror (Nanjing University)"
+name-tr = "nju-name"
+url = "https://mirror.nju.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "nju-loc"
+
+[[mirrors]]
+name = "SJTUG Siyuan Mirror"
+name-tr = "sjtug-name"
+url = "https://mirror.sjtu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "sjtug-loc"
+
+[[mirrors]]
+name = "Tencent Open Source Software Mirror"
+name-tr = "tencent-name"
+url = "https://mirrors.cloud.tencent.com/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tencent-loc"
+
+[[mirrors]]
+name = "Tsukuba WIDE Public Mirror service"
 name-tr = "tsukuba-name"
 url = "http://ftp.tsukuba.wide.ad.jp/Linux/anthon/aosc-os/"
 loc = "Japan"
 loc-tr = "tsukuba-loc"
 
 [[mirrors]]
-name = "NLUUG"
+name = "Tsinghua Open Source Mirror (TUNA)"
+name-tr = "tuna-name"
+url = "https://mirrors.tuna.tsinghua.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tuna-loc"
+
+[[mirrors]]
+name = "USTC Open Source Software Mirror"
+name-tr = "ustc-name"
+url = "https://mirrors.ustc.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "ustc-loc"
+
+[[mirrors]]
+name = "Netherlands Local Unix User Group (NLUUG) OSS Mirror"
 name-tr = "nluug-name"
 url = "https://ftp.nluug.nl/os/Linux/distr/anthon/aosc-os/"
 loc = "Europe"
 loc-tr = "nluug-loc"
+
+[[mirrors]]
+name = "xTom Open Source Software Mirror"
+name-tr = "xtom-name"
+url = "https://mirror.xtom.com.hk/anthon/aosc-os/"
+loc = "Hong Kong"
+loc-tr = "xtom-loc"
 
 [[mirrors]]
 name = "KoDDoS HK"
