@@ -52,6 +52,13 @@ loc = "China"
 loc-tr = "lzu-loc"
 
 [[mirrors]]
+name = "Nanyang Institute of Technology Open Source Mirror (CIPS)"
+name-tr = "nit-name"
+url = "https://mirror.nyist.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "nit-loc"
+
+[[mirrors]]
 name = "NJU Mirror (Nanjing University)"
 name-tr = "nju-name"
 url = "https://mirror.nju.edu.cn/anthon/aosc-os/"
