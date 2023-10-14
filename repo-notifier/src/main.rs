@@ -157,7 +157,7 @@ fn method_to_priority(v: &PVMessage) -> u8 {
 
 /// Sort the messages by priority and then truncate them to the given length
 fn sort_pending_messages_chunk(pending: &mut Vec<PVMessage>) -> EntryMapping {
-    let mut mapping = DefaultHashMap::new(vec![]);
+    let mut mapping: DefaultHashMap<String, Vec<String>> = DefaultHashMap::new();
     let mut remaining = LIST_MAX_LENGTH;
     let mut list_remaining = LIST_MAX_SIZE;
     mapping.reserve(LIST_MAX_SIZE);
