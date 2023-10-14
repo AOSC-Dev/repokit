@@ -11,6 +11,7 @@ use crate::parser::Tarball;
 
 mod parser;
 mod scan;
+mod sqfs;
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]

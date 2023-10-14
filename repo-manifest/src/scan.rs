@@ -2,19 +2,17 @@ use crate::parser::{
     flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, SquashFs, Tarball,
     UserConfig,
 };
+use crate::sqfs::collect_squashfs_size_and_inodes;
 use anyhow::{anyhow, Result};
-// use backhand::Squashfs as BackHandSquashfs;
 use log::{error, info, warn};
 use parking_lot::Mutex;
 use rayon::prelude::*;
 use sha2::{Digest, Sha256};
-use squashfs_ng::read::{Archive as SquashfsArchive, Node as SquashfsNode};
-// use std::io::BufReader;
-use std::path::{Path, PathBuf};
 use std::{
     convert::TryInto,
     fs::File,
     io::{Read, Seek, SeekFrom},
+    path::{Path, PathBuf},
     sync::Arc,
 };
 use walkdir::{DirEntry, WalkDir};
@@ -104,43 +102,6 @@ pub fn calculate_tarball_decompressed_size<R: Read + Seek>(mut reader: R) -> Res
     };
 
     Ok(size)
-}
-
-pub fn calculate_squashfs_size_and_inode(archive: &Path) -> Result<(u64, u32)> {
-    let sq = SquashfsArchive::new(archive)?;
-    let inodes = sq.size();
-
-    let dir = sq
-        .get("/")?
-        .ok_or_else(|| anyhow!("Could not get root directory: {}", archive.display()))?;
-
-    let size = add_size(dir)?;
-
-    Ok((size, inodes))
-}
-
-fn add_size(root_node: SquashfsNode) -> Result<u64> {
-    let root_dir = root_node.into_owned_dir()?;
-
-    let mut stack = Vec::with_capacity(1024);
-    let mut total = 0u64;
-
-    stack.push(root_dir);
-
-    while let Some(dir) = stack.pop() {
-        for entry in dir {
-            let entry = entry?;
-            if let Ok(file) = entry.as_file() {
-                total += file.size();
-            } else if entry.is_dir().unwrap_or(false) {
-                if let Ok(d) = entry.into_owned_dir() {
-                    stack.push(d);
-                }
-            }
-        }
-    }
-
-    Ok(total)
 }
 
 fn collect_files<P: AsRef<Path>, F: Fn(&DirEntry) -> bool>(
@@ -366,7 +327,7 @@ pub fn scan_files(
             let (size, inode) = unwrap_or_show_error!(
                 "Could not read file as stream {}: {}",
                 p.display(),
-                calculate_squashfs_size_and_inode(p)
+                collect_squashfs_size_and_inodes(p)
             );
 
             (size, Some(inode))
