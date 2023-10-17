@@ -177,7 +177,7 @@ pub fn increment_scan_files(
 
     info!("Incrementally scanning {} mediums...", new_files.len());
 
-    let diff_files = scan_files(&files, root_path, raw)?;
+    let diff_files = scan_files(&new_files, root_path, raw)?;
     new_existing_tarballs.extend(diff_files);
 
     Ok(new_existing_tarballs)

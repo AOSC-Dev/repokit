@@ -44,24 +44,38 @@ fn main() {
     let image_json = scan_images(&root_path);
     info!("Writing manifest...");
     let manifest_dir = Path::new(&root_path).join("manifest");
+    let mut error = false;
     if let Err(e) = create_dir_all(&manifest_dir) {
         error!("Could not create directory: {}", e);
         process::exit(1);
     }
-    if let Err(e) = tarball_json {
-        error!("Could not gather information about the tarballs: {}", e);
-        process::exit(1);
+    match tarball_json {
+        Ok(tarball_json) => {
+            if let Err(e) = write(manifest_dir.join("recipe.json"), tarball_json) {
+                error!("Could not write the manifest: {}", e);
+                error = true;
+            }
+        }
+        Err(e) => {
+            error!("Could not gather information about the tarballs: {}", e);
+            error = true;
+        }
     }
-    if let Err(e) = image_json {
-        error!("Could not gather information about the LiveKit: {}", e);
-        process::exit(1);
+
+    match image_json {
+        Ok(image_json) => {
+            if let Err(e) = write(manifest_dir.join("recipe.json"), image_json) {
+                error!("Could not write the manifest: {}", e);
+                error = true;
+            }
+        }
+        Err(e) => {
+            error!("Could not gather information about the tarballs: {}", e);
+            error = true;
+        }
     }
-    if let Err(e) = write(manifest_dir.join("recipe.json"), tarball_json.unwrap()) {
-        error!("Could not write the manifest: {}", e);
-        process::exit(1);
-    }
-    if let Err(e) = write(manifest_dir.join("livekit.json"), image_json.unwrap()) {
-        error!("Could not write the manifest: {}", e);
+
+    if error {
         process::exit(1);
     }
     info!("Manifest generated successfully.");
