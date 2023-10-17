@@ -1,5 +1,5 @@
 use crate::parser::{
-    flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, SquashFs, Tarball,
+    flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, RootFSType, Tarball,
     UserConfig,
 };
 use crate::sqfs::collect_squashfs_size_and_inodes;
@@ -133,93 +133,54 @@ pub fn collect_iso<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
 
 pub fn increment_scan_files(
     files: Vec<PathBuf>,
-    existing_files_tbl: Vec<Tarball>,
-    existing_files_sq: Vec<SquashFs>,
+    existing_files: Vec<Tarball>,
     root_path: &str,
     raw: bool,
-) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
+) -> Result<Vec<Tarball>> {
     let root_path_buf = PathBuf::from(root_path);
     let mut new_existing_tarballs: Vec<Tarball> = Vec::new();
-    let mut new_existing_sq: Vec<SquashFs> = Vec::new();
-    let mut new_files_tbl: Vec<PathBuf> = Vec::new();
-    let mut new_files_sq: Vec<PathBuf> = Vec::new();
-    new_existing_tarballs.reserve(existing_files_tbl.len());
-    new_existing_sq.reserve(existing_files_sq.len());
+    let mut new_files: Vec<PathBuf> = Vec::new();
+    new_existing_tarballs.reserve(existing_files.len());
 
-    let new_file_sq_len = files
-        .iter()
-        .filter(|x| x.extension().and_then(|x| x.to_str()) == Some("squashfs"))
-        .collect::<Vec<_>>()
-        .len();
-
-    let new_files_tbl_len = files.len() - new_file_sq_len;
-
-    new_files_tbl.reserve(new_file_sq_len);
-    new_files_sq.reserve(new_files_tbl_len);
-    for mut tarball in existing_files_tbl {
+    new_files.reserve(files.len());
+    for mut tarball in existing_files {
         let path = root_path_buf.join(&tarball.path);
         if files.contains(&path) {
             if let Some(filename) = PathBuf::from(&tarball.path).file_name() {
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
-                    tarball.variant = names.0;
-                    match names.3.as_str() {
-                        x if x.starts_with("tar.") => new_existing_tarballs.push(tarball),
+                    tarball.variant = names.variant.to_string();
+                    match names.type_ {
+                        x if x.starts_with("tar.") => {
+                            tarball.type_ = Some(RootFSType::Tarball);
+                        }
+                        x if x.ends_with("squashfs") => {
+                            tarball.type_ = Some(RootFSType::SquashFs);
+                        }
                         _ => continue,
                     }
+                    new_existing_tarballs.push(tarball);
                     continue;
                 }
             }
             warn!("Unable to determine the variant for {}", tarball.path);
         }
     }
-    for mut sq in existing_files_sq {
-        let path = root_path_buf.join(&sq.path);
-        if files.contains(&path) {
-            if let Some(filename) = PathBuf::from(&sq.path).file_name() {
-                if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
-                    sq.variant = names.0;
-                    match names.3.as_str() {
-                        "squashfs" => new_existing_sq.push(sq),
-                        _ => continue,
-                    }
-                    continue;
-                }
-            }
-            warn!("Unable to determine the variant for {}", sq.path);
-        }
-    }
 
-    for file in files {
-        let ext = file.extension().and_then(|x| x.to_str());
-
-        if ext == Some("squashfs") {
-            if !new_existing_sq
-                .iter()
-                .any(|t| root_path_buf.join(&t.path) == file)
-            {
-                new_files_sq.push(file);
-            }
-        } else if !new_existing_tarballs
+    for file in files.iter() {
+        if !new_existing_tarballs
             .iter()
-            .any(|t| root_path_buf.join(&t.path) == file)
-            && ext.filter(|x| x.starts_with("tar.")).is_some()
+            .any(|t| &root_path_buf.join(&t.path) == file)
         {
-            new_files_tbl.push(file.clone());
+            new_files.push(file.clone());
         }
     }
 
-    info!("Incrementally scanning {} tarballs...", new_files_tbl.len());
-    info!("Incrementally scanning {} squashfs...", new_files_sq.len());
-    let files = new_files_tbl
-        .into_iter()
-        .chain(new_files_sq)
-        .collect::<Vec<_>>();
+    info!("Incrementally scanning {} mediums...", new_files.len());
 
-    let (diff_files_tbl, diff_files_sq) = scan_files(&files, root_path, raw)?;
-    new_existing_tarballs.extend(diff_files_tbl);
-    new_existing_sq.extend(diff_files_sq);
+    let diff_files = scan_files(&files, root_path, raw)?;
+    new_existing_tarballs.extend(diff_files);
 
-    Ok((new_existing_tarballs, new_existing_sq))
+    Ok(new_existing_tarballs)
 }
 
 /// Filter all the files that do not exist in the configuration file
@@ -230,21 +191,21 @@ pub fn filter_files(files: Vec<PathBuf>, config: &UserConfig) -> Vec<PathBuf> {
     for file in files {
         if let Some(filename) = file.file_name() {
             if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
-                if retro_arches.contains(&names.2) {
-                    if config.distro.retro.contains_key(&names.0) {
+                if retro_arches.iter().any(|x| x == names.arch) {
+                    if config.distro.retro.contains_key(names.variant) {
                         filtered_files.push(file);
                         continue;
                     }
                     warn!(
                         "The variant `{} (retro)` is not in the config file.",
-                        names.0
+                        names.variant
                     );
-                } else if config.distro.mainline.contains_key(&names.0) {
+                } else if config.distro.mainline.contains_key(names.variant) {
                     filtered_files.push(file);
                 } else {
                     warn!(
                         "The variant `{} (mainline)` is not in the config file.",
-                        names.0
+                        names.variant
                     );
                 }
             }
@@ -259,7 +220,7 @@ pub fn smart_scan_files(
     config: &UserConfig,
     files: Vec<PathBuf>,
     root_path: &str,
-) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
+) -> Result<Vec<Tarball>> {
     let files = filter_files(files, config);
     let manifest = parse_manifest(&manifest);
     if let Err(e) = manifest {
@@ -271,18 +232,12 @@ pub fn smart_scan_files(
     let manifest = manifest.unwrap();
     let existing_files = flatten_variants(manifest);
 
-    increment_scan_files(files, existing_files.0, existing_files.1, root_path, false)
+    increment_scan_files(files, existing_files, root_path, false)
 }
 
-pub fn scan_files(
-    files: &[PathBuf],
-    root_path: &str,
-    raw: bool,
-) -> Result<(Vec<Tarball>, Vec<SquashFs>)> {
+pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<Tarball>> {
     let results: Vec<Tarball> = Vec::new();
-    let squashfs_results = Vec::new();
     let results_shared = Arc::new(Mutex::new(results));
-    let sq_results_shared = Arc::new(Mutex::new(squashfs_results));
     files.par_iter().for_each(|p| {
         info!("Scanning {}...", p.display());
         let rel_path = p.strip_prefix(root_path);
@@ -296,11 +251,11 @@ pub fn scan_files(
             p.display(),
             path.file_name().ok_or_else(|| anyhow!("None value found"))
         );
+        let filename = filename.to_string_lossy();
         let names = unwrap_or_show_error!(
             "Could not parse the filename {}: {}",
             p.display(),
-            get_splitted_name(&filename.to_string_lossy())
-                .ok_or_else(|| anyhow!("None value found"))
+            get_splitted_name(&filename).ok_or_else(|| anyhow!("None value found"))
         );
         let mut f = unwrap_or_show_error!("Could not open {}: {}", p.display(), File::open(p));
 
@@ -357,33 +312,23 @@ pub fn scan_files(
             sha256sum(&f)
         );
         let mut results = results_shared.lock();
-        let mut squashfs_results = sq_results_shared.lock();
-        if is_squashfs {
-            squashfs_results.push(SquashFs {
-                arch: names.2,
-                date: names.1,
-                variant: names.0,
-                download_size,
-                inst_size,
-                path: path.to_string_lossy().to_string(),
-                sha256sum,
-                inodes: inode.unwrap(),
-            })
-        } else {
-            results.push(Tarball {
-                arch: names.2,
-                date: names.1,
-                variant: names.0,
-                download_size,
-                inst_size,
-                path: path.to_string_lossy().to_string(),
-                sha256sum,
-            });
-        }
+        let result = Tarball {
+            arch: names.arch.to_string(),
+            date: names.date.to_string(),
+            variant: names.variant.to_string(),
+            type_: Some(if is_squashfs {
+                RootFSType::SquashFs
+            } else {
+                RootFSType::Tarball
+            }),
+            download_size,
+            inst_size,
+            path: path.to_string_lossy().to_string(),
+            sha256sum,
+            inodes: inode,
+        };
+        results.push(result);
     });
 
-    Ok((
-        Arc::try_unwrap(results_shared).unwrap().into_inner(),
-        Arc::try_unwrap(sq_results_shared).unwrap().into_inner(),
-    ))
+    Ok(Arc::try_unwrap(results_shared).unwrap().into_inner())
 }

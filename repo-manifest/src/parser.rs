@@ -3,6 +3,20 @@ use log::warn;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+pub enum RootFSType {
+    Tarball,
+    SquashFs,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FileNameParts<'a> {
+    pub arch: &'a str,
+    pub date: &'a str,
+    pub variant: &'a str,
+    pub type_: &'a str,
+}
+
 // mirror manifests
 #[derive(Serialize, Deserialize)]
 pub struct Mirror {
@@ -21,28 +35,18 @@ pub struct Tarball {
     pub date: String,
     #[serde(skip)]
     pub variant: String,
+    #[serde(skip)]
+    pub type_: Option<RootFSType>,
     #[serde(rename = "downloadSize")]
     pub download_size: i64,
     #[serde(rename = "instSize")]
     pub inst_size: i64,
     pub path: String,
     pub sha256sum: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inodes: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SquashFs {
-    pub arch: String,
-    pub date: String,
-    #[serde(skip)]
-    pub variant: String,
-    #[serde(rename = "downloadSize")]
-    pub download_size: i64,
-    #[serde(rename = "instSize")]
-    pub inst_size: i64,
-    pub path: String,
-    pub sha256sum: String,
-    pub inodes: u32,
-}
 #[derive(Serialize, Deserialize)]
 pub struct Variant {
     name: String,
@@ -51,7 +55,7 @@ pub struct Variant {
     #[serde(rename = "description-tr")]
     description_tr: String,
     tarballs: Vec<Tarball>,
-    squashfs: Vec<SquashFs>,
+    squashfs: Vec<Tarball>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -115,7 +119,7 @@ impl Variant {
         description: String,
         retro: bool,
         tarballs: Vec<Tarball>,
-        squashfs: Vec<SquashFs>,
+        squashfs: Vec<Tarball>,
     ) -> Self {
         Variant {
             name,
@@ -137,14 +141,14 @@ pub fn parse_manifest(data: &[u8]) -> Result<Recipe> {
     Ok(serde_json::from_slice(data)?)
 }
 
-pub fn flatten_variants(recipe: Recipe) -> (Vec<Tarball>, Vec<SquashFs>) {
-    let (mut results, mut results_sq) = (Vec::new(), Vec::new());
+pub fn flatten_variants(recipe: Recipe) -> Vec<Tarball> {
+    let mut results = Vec::with_capacity(128);
     for variant in recipe.variants {
         results.extend(variant.tarballs);
-        results_sq.extend(variant.squashfs);
+        results.extend(variant.squashfs);
     }
 
-    (results, results_sq)
+    results
 }
 
 pub fn get_root_path(config: &UserConfig) -> String {
@@ -159,10 +163,7 @@ pub fn generate_manifest(manifest: &Recipe) -> Result<String> {
     Ok(serde_json::to_string(manifest)?)
 }
 
-pub fn assemble_variants(
-    config: &UserConfig,
-    files: (Vec<Tarball>, Vec<SquashFs>),
-) -> Vec<Variant> {
+pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Variant> {
     let mut variants: HashMap<String, Variant> = HashMap::new();
     let mut variants_r: HashMap<String, Variant> = HashMap::new();
     let mut results = Vec::new();
@@ -193,26 +194,18 @@ pub fn assemble_variants(
         );
     }
     let retro_arches = &config.config.retro_arches;
-    for file in files.0 {
+    for file in files {
         let v = if retro_arches.contains(&file.arch) {
             variants_r.get_mut(&file.variant)
         } else {
             variants.get_mut(&file.variant)
         };
         if let Some(v) = v {
-            v.tarballs.push(file);
-        } else {
-            warn!("The variant `{}` is not in the config file.", file.variant);
-        }
-    }
-    for file in files.1 {
-        let v = if retro_arches.contains(&file.arch) {
-            variants_r.get_mut(&file.variant)
-        } else {
-            variants.get_mut(&file.variant)
-        };
-        if let Some(v) = v {
-            v.squashfs.push(file);
+            match file.type_ {
+                Some(RootFSType::SquashFs) => v.squashfs.push(file),
+                Some(RootFSType::Tarball) => v.tarballs.push(file),
+                None => warn!("Unknown variant for file: {}", file.path),
+            }
         } else {
             warn!("The variant `{}` is not in the config file.", file.variant);
         }
@@ -240,21 +233,21 @@ pub fn assemble_manifest(config: UserConfig, variants: Vec<Variant>) -> Recipe {
 // AOSC OS tarball names have the following pattern:
 // aosc-os_<variant>_<date>_<arch>.<ext>
 // aosc-os_base_20200526_amd64.tar.xz
-pub fn get_splitted_name(name: &str) -> Option<(String, String, String, String)> {
+pub fn get_splitted_name(name: &'_ str) -> Option<FileNameParts<'_>> {
     let mut splitted = name.split('_');
     splitted.next()?;
     let variant = splitted.next()?;
     let date = splitted.next()?;
     let rest = splitted.next()?.split_once('.')?;
     let arch = rest.0;
-    let rootfs_type = rest.1.to_string();
+    let rootfs_type = rest.1;
 
-    Some((
-        variant.to_owned(),
-        date.to_owned(),
-        arch.to_owned(),
-        rootfs_type,
-    ))
+    Some(FileNameParts {
+        arch,
+        date,
+        variant,
+        type_: rootfs_type,
+    })
 }
 
 #[test]
@@ -262,21 +255,21 @@ fn test_split_name() {
     let names = get_splitted_name("aosc-os_base_20200526_amd64.tar.xz").unwrap();
     assert_eq!(
         names,
-        (
-            "base".to_owned(),
-            "20200526".to_owned(),
-            "amd64".to_owned(),
-            "tar.xz".to_owned()
-        )
+        FileNameParts {
+            arch: "amd64",
+            date: "20200526",
+            variant: "base",
+            type_: "tar.xz",
+        }
     );
     let names = get_splitted_name("aosc-os_server_20230714_loongarch64.squashfs").unwrap();
     assert_eq!(
         names,
-        (
-            "server".to_owned(),
-            "20230714".to_owned(),
-            "loongarch64".to_owned(),
-            "squashfs".to_owned()
-        )
+        FileNameParts {
+            arch: "loongarch64",
+            date: "20230714",
+            variant: "server",
+            type_: "squashfs",
+        }
     );
 }
