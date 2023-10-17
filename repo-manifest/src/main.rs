@@ -65,7 +65,7 @@ fn main() {
 
     match image_json {
         Ok(image_json) => {
-            if let Err(e) = write(manifest_dir.join("recipe.json"), image_json) {
+            if let Err(e) = write(manifest_dir.join("livekit.json"), image_json) {
                 error!("Could not write the manifest: {}", e);
                 error = true;
             }
