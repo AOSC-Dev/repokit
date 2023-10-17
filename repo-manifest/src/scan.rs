@@ -3,6 +3,7 @@ use crate::parser::{
     UserConfig,
 };
 use crate::sqfs::collect_squashfs_size_and_inodes;
+use crate::xz::calculate_xz_decompressed_size;
 use anyhow::{anyhow, Result};
 use log::{error, info, warn};
 use parking_lot::Mutex;
@@ -86,6 +87,12 @@ pub fn calculate_tarball_decompressed_size<R: Read + Seek>(mut reader: R) -> Res
     reader
         .seek(SeekFrom::Start(0))
         .map_err(|e| anyhow!("Could not seek {}", e))?;
+
+    let use_fast = std::env::var("USE_FAST_XZ").is_ok();
+
+    if use_fast {
+        return Ok(calculate_xz_decompressed_size(reader)?);
+    }
 
     let size = {
         let mut buffer = [0u8; 4096];
