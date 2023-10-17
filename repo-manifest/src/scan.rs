@@ -157,13 +157,19 @@ pub fn increment_scan_files(
                 if let Some(names) = get_splitted_name(&filename.to_string_lossy()) {
                     tarball.variant = names.variant.to_string();
                     match names.type_ {
+                        "iso" | "img" => {
+                            tarball.type_ = Some(RootFSType::Tarball);
+                        }
                         x if x.starts_with("tar.") => {
                             tarball.type_ = Some(RootFSType::Tarball);
                         }
-                        x if x.ends_with("squashfs") => {
+                        "squashfs" | "sfs" => {
                             tarball.type_ = Some(RootFSType::SquashFs);
                         }
-                        _ => continue,
+                        _ => {
+                            warn!("Unknown file type: {}", names.type_);
+                            continue;
+                        },
                     }
                     new_existing_tarballs.push(tarball);
                     continue;
