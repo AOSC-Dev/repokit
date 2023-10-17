@@ -1,6 +1,6 @@
 [config]
 path = "/mirror/aosc-os"
-retro_arches = ["armel", "armhf", "i486", "powerpc", "ppc64"]
+retro_arches = ["alpha", "armv4", "armv6hf", "armv7hf", "i486", "loongson2f", "m68k", "powerpc", "ppc64", "sparc64"]
 
 [bulletin]
 type = "info"
