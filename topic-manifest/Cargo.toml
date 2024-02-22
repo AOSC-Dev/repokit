@@ -13,6 +13,6 @@ serde_json = "1.0"
 log = "0.4"
 walkdir = "2.4"
 argh = "0.1"
-env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }
+env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
 nom = "^7"
-attohttpc = { version = "0.26", features = ["json"] }
+attohttpc = { version = "0.27", features = ["json"] }
