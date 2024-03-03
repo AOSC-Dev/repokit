@@ -166,53 +166,53 @@ loc-tr = "xtom-loc"
 [distro.mainline.desktop]
 name = "Desktop"
 name-tr = "desktop-name"
-description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface."
+description = "A full-featured desktop experience."
 description-tr = "desktop-description"
 
 [distro.mainline."desktop+nvidia"]
 name = "Desktop (with NVIDIA driver)"
 name-tr = "desktop+nvidia-name"
-description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface (with pre-installed NVIDIA Proprietary Drivers)."
+description = "A full-featured desktop experience (with proprietary NVIDIA driver)."
 description-tr = "desktop+nvidia-description"
 
 [distro.mainline.base]
 name = "Base"
 name-tr = "base-name"
-description = "The Base variant provides a minimal set of features, just enough for you to get started. Base is still a pre-configured variant like other AOSC OS variants. Therefore, Base is suitable for performance constrained devices and servers."
+description = "A minimal system with a basic set of utilities."
 description-tr = "base-description"
 
 [distro.mainline.buildkit]
 name = "BuildKit"
 name-tr = "buildkit-name"
-description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description = "A standardized development environment."
 description-tr = "buildkit-description"
 
 [distro.mainline.server]
 name = "Server"
 name-tr = "server-name"
-description = "Server releases are base system releases with additional tools for hosting remote files and Web contents, providing network routing, and other functions that enriches network access and resources for client devices."
+description = "A full-featured system for personal servers."
 description-tr = "server-description"
 
 [distro.retro.desktop]
 name = "Desktop"
 name-tr = "retro-desktop-name"
-description = "Full-featured release featuring the Trinity Desktop Environment, a spiritual successor to the venerable KDE 3.5. Experience the pinnacle of meticulous user interface design, still aspired by desktop environments of our day."
+description = "A full-featured desktop experience (for legacy devices)."
 description-tr = "retro-desktop-description"
 
 [distro.retro.base]
 name = "Base"
 name-tr = "retro-base-name"
-description = "A base system release with a minimal set of applications and tools to get you started. This release is recommended for older, headless (non-graphical), or storage constrained systems."
+description = "A minimal system with a basic set of utilities (for legacy devices)."
 description-tr = "retro-base-description"
 
 [distro.retro.server]
 name = "Server"
 name-tr = "retro-server-name"
-description = "A base system release bundled with server applications, for performance and storage contraint servers and older development boards."
+description = "A full-featured system for personal servers (for legacy devices)."
 description-tr = "retro-server-description"
 
 [distro.retro.buildkit]
 name = "BuildKit"
 name-tr = "buildkit-name"
-description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description = "A standardized development environment (for legacy devices)."
 description-tr = "buildkit-description"
