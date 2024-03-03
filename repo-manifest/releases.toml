@@ -116,38 +116,38 @@ loc-tr = "nluug-loc"
 
 [[mirrors]]
 name = "xTom Open Source Software Mirror (Estonia)"
-name-tr = "xtom-name"
+name-tr = "xtom-ee-name"
 url = "https://mirror.xtom.ee/anthon/aosc-os/"
 loc = "Europe"
-loc-tr = "xtom-loc"
+loc-tr = "xtom-ee-loc"
 
 [[mirrors]]
 name = "xTom Open Source Software Mirror (Germany)"
-name-tr = "xtom-name"
+name-tr = "xtom-de-name"
 url = "https://mirror.xtom.de/anthon/aosc-os/"
 loc = "Europe"
-loc-tr = "xtom-loc"
+loc-tr = "xtom-de-loc"
 
 [[mirrors]]
 name = "xTom Open Source Software Mirror (Netherlands)"
-name-tr = "xtom-name"
+name-tr = "xtom-nl-name"
 url = "https://mirror.xtom.nl/anthon/aosc-os/"
 loc = "Europe"
-loc-tr = "xtom-loc"
+loc-tr = "xtom-nl-loc"
 
 [[mirrors]]
 name = "KoDDoS HK"
-name-tr = "koddos-name"
+name-tr = "koddos-hk-name"
 url = "https://mirror-hk.koddos.net/anthon/aosc-os/"
 loc = "Hong Kong"
-loc-tr = "koddos-loc"
+loc-tr = "koddos-hk-loc"
 
 [[mirrors]]
 name = "xTom Open Source Software Mirror (Hong Kong)"
-name-tr = "xtom-name"
+name-tr = "xtom-hk-name"
 url = "https://mirror.xtom.com.hk/anthon/aosc-os/"
 loc = "Hong Kong"
-loc-tr = "xtom-loc"
+loc-tr = "xtom-hk-loc"
 
 [[mirrors]]
 name = "Fastly CDN"
@@ -213,6 +213,6 @@ description-tr = "retro-server-description"
 
 [distro.retro.buildkit]
 name = "BuildKit"
-name-tr = "buildkit-name"
+name-tr = "retro-buildkit-name"
 description = "A standardized development environment (for legacy devices)."
-description-tr = "buildkit-description"
+description-tr = "retro-buildkit-description"
