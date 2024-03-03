@@ -169,7 +169,7 @@ pub fn increment_scan_files(
                         _ => {
                             warn!("Unknown file type: {}", names.type_);
                             continue;
-                        },
+                        }
                     }
                     new_existing_tarballs.push(tarball);
                     continue;

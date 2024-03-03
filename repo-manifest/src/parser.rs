@@ -50,6 +50,8 @@ pub struct Tarball {
 #[derive(Serialize, Deserialize)]
 pub struct Variant {
     name: String,
+    #[serde(rename = "name-tr")]
+    name_tr: String,
     retro: bool,
     description: String,
     #[serde(rename = "description-tr")]
@@ -123,6 +125,7 @@ impl Variant {
     ) -> Self {
         Variant {
             name,
+            name_tr: format!("{}{}-name", key, if retro { "-retro" } else { "" }),
             retro,
             description,
             description_tr: format!("{}{}-description", key, if retro { "-retro" } else { "" }),
