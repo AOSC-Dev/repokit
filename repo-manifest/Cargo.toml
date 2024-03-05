@@ -18,7 +18,7 @@ xz2 = "0.1"
 sha2 = "0.10"
 log = "0.4"
 env_logger = "0.11"
-toml = "0.8"
+toml = { version = "0.8", features = ["preserve_order"] }
 clap = { version = "^4", features = ["derive"] }
 walkdir = "2"
 parking_lot = "0.12"
