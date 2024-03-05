@@ -168,18 +168,21 @@ name = "Desktop"
 name-tr = "desktop-name"
 description = "A full-featured desktop experience."
 description-tr = "desktop-description"
+index = 0
 
 [distro.mainline."desktop+nvidia"]
 name = "Desktop (with NVIDIA driver)"
 name-tr = "desktop+nvidia-name"
 description = "A full-featured desktop experience (with proprietary NVIDIA driver)."
 description-tr = "desktop+nvidia-description"
+index = 1
 
 [distro.mainline.base]
 name = "Base"
 name-tr = "base-name"
 description = "A minimal system with a basic set of utilities."
 description-tr = "base-description"
+index = 2
 
 [distro.mainline.buildkit]
 name = "BuildKit"
@@ -192,24 +195,28 @@ name = "Server"
 name-tr = "server-name"
 description = "A full-featured system for personal servers."
 description-tr = "server-description"
+index = 3
 
 [distro.retro.desktop]
 name = "Desktop"
 name-tr = "retro-desktop-name"
 description = "A full-featured desktop experience (for legacy devices)."
 description-tr = "retro-desktop-description"
+index = 0
 
 [distro.retro.base]
 name = "Base"
 name-tr = "retro-base-name"
 description = "A minimal system with a basic set of utilities (for legacy devices)."
 description-tr = "retro-base-description"
+index = 1
 
 [distro.retro.server]
 name = "Server"
 name-tr = "retro-server-name"
 description = "A full-featured system for personal servers (for legacy devices)."
 description-tr = "retro-server-description"
+index = 2
 
 [distro.retro.buildkit]
 name = "BuildKit"
