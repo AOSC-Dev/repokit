@@ -171,9 +171,9 @@ description-tr = "desktop-description"
 
 [distro.mainline."desktop+nvidia"]
 name = "Desktop (with NVIDIA driver)"
-name-tr = "desktop-nvidia-name"
+name-tr = "desktop+nvidia-name"
 description = "A full-featured desktop experience (with proprietary NVIDIA driver)."
-description-tr = "desktop-nvidia-description"
+description-tr = "desktop+nvidia-description"
 
 [distro.mainline.base]
 name = "Base"
