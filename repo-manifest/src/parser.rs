@@ -1,4 +1,5 @@
 use anyhow::Result;
+use indexmap::IndexMap;
 use log::warn;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -100,10 +101,10 @@ pub struct UserVariantConfig {
     description: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UserDistroConfig {
-    pub mainline: HashMap<String, UserVariantConfig>,
-    pub retro: HashMap<String, UserVariantConfig>,
+    pub mainline: IndexMap<String, UserVariantConfig>,
+    pub retro: IndexMap<String, UserVariantConfig>,
 }
 
 #[derive(Serialize, Deserialize)]

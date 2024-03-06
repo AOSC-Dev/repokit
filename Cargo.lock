@@ -1362,6 +1362,7 @@ checksum = "7b0b929d511467233429c45a44ac1dcaa21ba0f5ba11e4879e6ed28ddb4f9df4"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
 ]
 
 [[package]]
@@ -2048,6 +2049,7 @@ dependencies = [
  "clap",
  "env_logger 0.11.2",
  "hex",
+ "indexmap",
  "log",
  "memmap2",
  "parking_lot",
