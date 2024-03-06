@@ -2,7 +2,6 @@ use anyhow::Result;
 use indexmap::IndexMap;
 use log::warn;
 use serde_derive::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum RootFSType {
@@ -168,8 +167,8 @@ pub fn generate_manifest(manifest: &Recipe) -> Result<String> {
 }
 
 pub fn assemble_variants(config: &UserConfig, files: Vec<Tarball>) -> Vec<Variant> {
-    let mut variants: HashMap<String, Variant> = HashMap::new();
-    let mut variants_r: HashMap<String, Variant> = HashMap::new();
+    let mut variants: IndexMap<String, Variant> = IndexMap::new();
+    let mut variants_r: IndexMap<String, Variant> = IndexMap::new();
     let mut results = Vec::new();
     for (k, v) in config.distro.mainline.iter() {
         variants.insert(
