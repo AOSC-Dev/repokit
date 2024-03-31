@@ -16,6 +16,7 @@ pub struct TopicManifest {
     name: String,
     description: Option<String>,
     date: u64,
+    update_date: u64,
     arch: Vec<String>,
     packages: Vec<String>,
 }
@@ -34,6 +35,13 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap_or_else(|_| Duration::new(0, 0))
         .as_secs();
+    let updated = metadata
+        .modified()
+        .unwrap_or(SystemTime::UNIX_EPOCH)
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap_or_else(|_| Duration::new(0, 0))
+        .as_secs();
+
     let topic_name = topic_path.file_name();
     info!("Scanning topic {:?}", topic_name);
     // do not include "stable" as a topic
@@ -73,6 +81,7 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
         name: topic_name.to_string_lossy().to_string(),
         description: None,
         date: created,
+        update_date: updated,
         arch: all_arch,
         packages: all_names.into_iter().collect::<Vec<String>>(),
     })
