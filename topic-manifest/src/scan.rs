@@ -35,12 +35,6 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap_or_else(|_| Duration::new(0, 0))
         .as_secs();
-    let updated = metadata
-        .modified()
-        .unwrap_or(SystemTime::UNIX_EPOCH)
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_else(|_| Duration::new(0, 0))
-        .as_secs();
 
     let topic_name = topic_path.file_name();
     info!("Scanning topic {:?}", topic_name);
@@ -48,6 +42,16 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
     if topic_name.to_string_lossy() == "stable" {
         return Err(anyhow!("'stable' is not a topic"));
     }
+
+    // Get modified time from InRelease file
+    let inrelease = topic_path.path().join("InRelease");
+    let inrelease_metadata = inrelease.metadata()?;
+    let updated = inrelease_metadata
+        .modified()?
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap_or_else(|_| Duration::new(0, 0))
+        .as_secs();
+
     let topic_dir = topic_path.path().join("main");
     // HashSet is used here since it's nearly O(1) in time in contrast to Vec which is O(n) in time when searching
     let mut all_names: HashSet<String> = HashSet::new();
@@ -61,6 +65,7 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
             let packages = entry.path().join("Packages");
             let contents = fs::read(packages)?;
             let names = parser::extract_all_names(&contents);
+
             if let Ok((left, names)) = names {
                 if !left.is_empty() {
                     warn!(
