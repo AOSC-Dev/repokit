@@ -3,7 +3,8 @@ members = [
   "repo-manifest",
   "repo-redirect",
   "repo-notifier",
-  "topic-manifest"
+  "topic-manifest",
+  "discourse-notifier"
 ]
 resolver = "2"
 
