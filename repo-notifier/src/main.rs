@@ -134,10 +134,11 @@ impl PVMessage {
     }
 }
 
-fn connect_redis(endpoint: &str) -> Result<redis::Connection> {
+async fn connect_redis(
+    endpoint: &str,
+) -> Result<redis::Client> {
     let client = redis::Client::open(endpoint)?;
-    let con = client.get_connection()?;
-    Ok(con)
+    Ok(client)
 }
 
 #[inline]
@@ -247,26 +248,59 @@ async fn parse_message(message: &str, pending: &mut Vec<PVMessage>) -> Result<()
 
 /// Monitor the Redis endpoint of p-vector
 async fn monitor_pv(
-    mut sock: redis::Connection,
+    client: redis::Client,
     bot: &Bot,
     db: &sqlite::SqlitePool,
 ) -> Result<()> {
-    let mut pubsub = sock.as_pubsub();
-    pubsub.subscribe("p-vector-publish")?;
+    let mut pubsub = client.get_async_pubsub().await?;
+    pubsub.subscribe("p-vector-publish").await?;
 
     let mut fail_count = 0usize;
     let mut pending = Vec::new();
     let mut pending_time = COOLDOWN_TIME;
     loop {
-        let payload: Result<String, redis::RedisError> =
-            pubsub.get_message().and_then(|msg| msg.get_payload());
-        match payload {
-            Ok(msg) => {
-                UPDATED.fetch_or(true, Ordering::SeqCst);
-                match parse_message(&msg, &mut pending).await {
-                    Ok(_) => pending_time = COOLDOWN_TIME,
-                    Err(err) => {
-                        log::warn!("Invalid message received: {}", err);
+        while let Some(msg) = pubsub.on_message().next().await {
+            let payload: Result<String, _> = msg.get_payload();
+            match payload {
+                Ok(msg) => {
+                    UPDATED.fetch_or(true, Ordering::SeqCst);
+                    match parse_message(&msg, &mut pending).await {
+                        Ok(_) => pending_time = COOLDOWN_TIME,
+                        Err(err) => {
+                            log::warn!("Invalid message received: {}", err);
+                            fail_count += 1;
+                            if fail_count > 10 {
+                                log::error!("Too many errors encountered. Stopped monitoring Redis!");
+                                // Flush all the pending messages and then return
+                                send_all_pending_messages(&mut pending, bot, db).await.ok();
+                                return Err(anyhow!("Too many errors encountered"));
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    if pending_time < 1 {
+                        // check if pending messages list is empty
+                        MSGSENT.fetch_or(!pending.is_empty(), Ordering::SeqCst);
+                        // accumulate enough pending messages to send
+                        send_all_pending_messages(&mut pending, bot, db).await.ok();
+                        // check if "repository refreshed" needs to be sent
+                        if WRITTEN.fetch_and(false, Ordering::SeqCst) {
+                            let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
+                            if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
+                                send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
+                            }
+                            send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
+                        }
+                        pending_time = COOLDOWN_TIME; // reset the pending time
+                        continue;
+                    }
+                    pending_time -= 1;
+                    if e.kind() == redis::ErrorKind::TryAgain {
+                        sleep(Duration::from_secs(1)).await;
+                        continue;
+                    } else {
+                        log::error!("Error occurred while receiving Redis message: {}", e);
                         fail_count += 1;
                         if fail_count > 10 {
                             log::error!("Too many errors encountered. Stopped monitoring Redis!");
@@ -274,38 +308,6 @@ async fn monitor_pv(
                             send_all_pending_messages(&mut pending, bot, db).await.ok();
                             return Err(anyhow!("Too many errors encountered"));
                         }
-                    }
-                }
-            }
-            Err(e) => {
-                if pending_time < 1 {
-                    // check if pending messages list is empty
-                    MSGSENT.fetch_or(!pending.is_empty(), Ordering::SeqCst);
-                    // accumulate enough pending messages to send
-                    send_all_pending_messages(&mut pending, bot, db).await.ok();
-                    // check if "repository refreshed" needs to be sent
-                    if WRITTEN.fetch_and(false, Ordering::SeqCst) {
-                        let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
-                        if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
-                            send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
-                        }
-                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
-                    }
-                    pending_time = COOLDOWN_TIME; // reset the pending time
-                    continue;
-                }
-                pending_time -= 1;
-                if e.kind() == redis::ErrorKind::TryAgain {
-                    sleep(Duration::from_secs(1)).await;
-                    continue;
-                } else {
-                    log::error!("Error occurred while receiving Redis message: {}", e);
-                    fail_count += 1;
-                    if fail_count > 10 {
-                        log::error!("Too many errors encountered. Stopped monitoring Redis!");
-                        // Flush all the pending messages and then return
-                        send_all_pending_messages(&mut pending, bot, db).await.ok();
-                        return Err(anyhow!("Too many errors encountered"));
                     }
                 }
             }
@@ -373,7 +375,9 @@ async fn run() -> Result<()> {
     pretty_env_logger::init();
     log::info!("Starting bot...");
 
-    let rx = connect_redis(&redis_addr).expect("Unable to connect to redis endpoint!");
+    let rx = connect_redis(&redis_addr)
+        .await
+        .expect("Unable to connect to redis endpoint!");
     log::info!("Redis connected.");
     let bot = Bot::from_env();
     log::info!("Bot connected.");
