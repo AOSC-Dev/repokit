@@ -134,9 +134,7 @@ impl PVMessage {
     }
 }
 
-async fn connect_redis(
-    endpoint: &str,
-) -> Result<redis::Client> {
+async fn connect_redis(endpoint: &str) -> Result<redis::Client> {
     let client = redis::Client::open(endpoint)?;
     Ok(client)
 }
@@ -247,27 +245,41 @@ async fn parse_message(message: &str, pending: &mut Vec<PVMessage>) -> Result<()
 }
 
 /// Monitor the Redis endpoint of p-vector
-async fn monitor_pv(
-    client: redis::Client,
-    bot: &Bot,
-    db: &sqlite::SqlitePool,
-) -> Result<()> {
+async fn monitor_pv(client: redis::Client, bot: &Bot, db: &sqlite::SqlitePool) -> Result<()> {
     let mut pubsub = client.get_async_pubsub().await?;
     pubsub.subscribe("p-vector-publish").await?;
 
     let mut fail_count = 0usize;
     let mut pending = Vec::new();
     let mut pending_time = COOLDOWN_TIME;
+    let mut stream = pubsub.on_message();
     loop {
-        while let Some(msg) = pubsub.on_message().next().await {
-            let payload: Result<String, _> = msg.get_payload();
-            match payload {
-                Ok(msg) => {
-                    UPDATED.fetch_or(true, Ordering::SeqCst);
-                    match parse_message(&msg, &mut pending).await {
-                        Ok(_) => pending_time = COOLDOWN_TIME,
-                        Err(err) => {
-                            log::warn!("Invalid message received: {}", err);
+        tokio::select! {
+            Some(msg) = stream.next() => {
+                let payload: Result<String, _> = msg.get_payload();
+                match payload {
+                    Ok(msg) => {
+                        UPDATED.fetch_or(true, Ordering::SeqCst);
+                        match parse_message(&msg, &mut pending).await {
+                            Ok(_) => pending_time = COOLDOWN_TIME,
+                            Err(err) => {
+                                log::warn!("Invalid message received: {}", err);
+                                fail_count += 1;
+                                if fail_count > 10 {
+                                    log::error!("Too many errors encountered. Stopped monitoring Redis!");
+                                    // Flush all the pending messages and then return
+                                    send_all_pending_messages(&mut pending, bot, db).await.ok();
+                                    return Err(anyhow!("Too many errors encountered"));
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        if e.kind() == redis::ErrorKind::TryAgain {
+                            sleep(Duration::from_secs(1)).await;
+                            continue;
+                        } else {
+                            log::error!("Error occurred while receiving Redis message: {}", e);
                             fail_count += 1;
                             if fail_count > 10 {
                                 log::error!("Too many errors encountered. Stopped monitoring Redis!");
@@ -278,40 +290,27 @@ async fn monitor_pv(
                         }
                     }
                 }
-                Err(e) => {
-                    if pending_time < 1 {
-                        // check if pending messages list is empty
-                        MSGSENT.fetch_or(!pending.is_empty(), Ordering::SeqCst);
-                        // accumulate enough pending messages to send
-                        send_all_pending_messages(&mut pending, bot, db).await.ok();
-                        // check if "repository refreshed" needs to be sent
-                        if WRITTEN.fetch_and(false, Ordering::SeqCst) {
-                            let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
-                            if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
-                                send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
-                            }
-                            send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
-                        }
-                        pending_time = COOLDOWN_TIME; // reset the pending time
-                        continue;
-                    }
-                    pending_time -= 1;
-                    if e.kind() == redis::ErrorKind::TryAgain {
-                        sleep(Duration::from_secs(1)).await;
-                        continue;
-                    } else {
-                        log::error!("Error occurred while receiving Redis message: {}", e);
-                        fail_count += 1;
-                        if fail_count > 10 {
-                            log::error!("Too many errors encountered. Stopped monitoring Redis!");
-                            // Flush all the pending messages and then return
-                            send_all_pending_messages(&mut pending, bot, db).await.ok();
-                            return Err(anyhow!("Too many errors encountered"));
-                        }
-                    }
-                }
             }
-        }
+            _ = tokio::time::sleep(Duration::from_secs(1)) => {
+                if pending_time < 1 {
+                    // check if pending messages list is empty
+                    MSGSENT.fetch_or(!pending.is_empty(), Ordering::SeqCst);
+                    // accumulate enough pending messages to send
+                    send_all_pending_messages(&mut pending, bot, db).await.ok();
+                    // check if "repository refreshed" needs to be sent
+                    if WRITTEN.fetch_and(false, Ordering::SeqCst) {
+                        let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
+                        if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
+                            send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
+                        }
+                        send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
+                    }
+                    pending_time = COOLDOWN_TIME; // reset the pending time
+                    continue;
+                }
+                pending_time -= 1;
+            }
+        };
     }
 }
 
