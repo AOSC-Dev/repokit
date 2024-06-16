@@ -1,5 +1,3 @@
-use std::{sync::atomic::Ordering, time::Duration};
-
 use anyhow::{anyhow, Result};
 use defaultmap::DefaultHashMap;
 use futures_util::StreamExt;
@@ -7,6 +5,7 @@ use inotify::{Inotify, WatchMask};
 use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
+use std::{sync::atomic::Ordering, time::Duration};
 use teloxide::{
     payloads::SendMessageSetters,
     prelude::*,
@@ -135,13 +134,10 @@ impl PVMessage {
     }
 }
 
-fn connect_zmq(endpoint: &str) -> Result<zmq::Socket> {
-    let ctx = zmq::Context::new();
-    let sock = ctx.socket(zmq::SUB)?;
-    sock.connect(endpoint)?;
-    sock.set_subscribe(b"")?;
-
-    Ok(sock)
+fn connect_redis(endpoint: &str) -> Result<redis::Connection> {
+    let client = redis::Client::open(endpoint)?;
+    let con = client.get_connection()?;
+    Ok(con)
 }
 
 #[inline]
@@ -243,51 +239,37 @@ async fn send_all_pending_messages(
 }
 
 /// Parse on-the-wire messages
-async fn parse_message(
-    message: &[u8],
-    pending: &mut Vec<PVMessage>,
-    new_protocol: bool,
-) -> Result<()> {
-    if new_protocol {
-        let messages: Vec<PVMessageNew> = bincode::deserialize(message)?;
-        pending.extend(messages.into_iter().map(|x| PVMessage {
-            comp: x.comp,
-            pkg: x.pkg,
-            arch: x.arch,
-            method: PVMessageMethod::New(x.method),
-            from_ver: x.from_ver,
-            to_ver: x.to_ver,
-        }));
-        Ok(())
-    } else {
-        let msg = serde_json::from_slice::<PVMessage>(message)?;
-        pending.push(msg);
-        Ok(())
-    }
+async fn parse_message(message: &str, pending: &mut Vec<PVMessage>) -> Result<()> {
+    let msg = serde_json::from_str::<Vec<PVMessage>>(message)?;
+    pending.extend(msg);
+    Ok(())
 }
 
-/// Monitor the ZMQ endpoint of p-vector
+/// Monitor the Redis endpoint of p-vector
 async fn monitor_pv(
-    sock: zmq::Socket,
+    mut sock: redis::Connection,
     bot: &Bot,
     db: &sqlite::SqlitePool,
-    new_protocol: bool,
 ) -> Result<()> {
+    let mut pubsub = sock.as_pubsub();
+    pubsub.subscribe("p-vector-publish")?;
+
     let mut fail_count = 0usize;
     let mut pending = Vec::new();
     let mut pending_time = COOLDOWN_TIME;
     loop {
-        let payload = sock.recv_bytes(zmq::DONTWAIT);
+        let payload: Result<String, redis::RedisError> =
+            pubsub.get_message().and_then(|msg| msg.get_payload());
         match payload {
             Ok(msg) => {
                 UPDATED.fetch_or(true, Ordering::SeqCst);
-                match parse_message(&msg, &mut pending, new_protocol).await {
+                match parse_message(&msg, &mut pending).await {
                     Ok(_) => pending_time = COOLDOWN_TIME,
                     Err(err) => {
                         log::warn!("Invalid message received: {}", err);
                         fail_count += 1;
                         if fail_count > 10 {
-                            log::error!("Too many errors encountered. Stopped monitoring ZMQ!");
+                            log::error!("Too many errors encountered. Stopped monitoring Redis!");
                             // Flush all the pending messages and then return
                             send_all_pending_messages(&mut pending, bot, db).await.ok();
                             return Err(anyhow!("Too many errors encountered"));
@@ -304,7 +286,7 @@ async fn monitor_pv(
                     // check if "repository refreshed" needs to be sent
                     if WRITTEN.fetch_and(false, Ordering::SeqCst) {
                         let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
-                        if !MSGSENT.fetch_and(false, Ordering::SeqCst) && new_protocol {
+                        if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
                             send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
                         }
                         send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
@@ -313,14 +295,14 @@ async fn monitor_pv(
                     continue;
                 }
                 pending_time -= 1;
-                if e == zmq::Error::EAGAIN {
+                if e.kind() == redis::ErrorKind::TryAgain {
                     sleep(Duration::from_secs(1)).await;
                     continue;
                 } else {
-                    log::error!("Error occurred while receiving zmq message: {}", e);
+                    log::error!("Error occurred while receiving Redis message: {}", e);
                     fail_count += 1;
                     if fail_count > 10 {
-                        log::error!("Too many errors encountered. Stopped monitoring ZMQ!");
+                        log::error!("Too many errors encountered. Stopped monitoring Redis!");
                         // Flush all the pending messages and then return
                         send_all_pending_messages(&mut pending, bot, db).await.ok();
                         return Err(anyhow!("Too many errors encountered"));
@@ -386,14 +368,13 @@ async fn answer(
 async fn run() -> Result<()> {
     let pool = sqlite::SqlitePool::connect(&std::env::var("DATABASE_URL").unwrap()).await?;
     migrate!().run(&pool).await?;
-    let zmq_addr =
-        std::env::var("ZMQ_ENDPOINT").expect("Please set ZMQ_ENDPOINT environment variable!");
-    let new_protocol = std::env::var("NEW_PROTOCOL").is_ok();
+    let redis_addr =
+        std::env::var("REDIS_ENDPOINT").expect("Please set REDIS_ENDPOINT environment variable!");
     pretty_env_logger::init();
     log::info!("Starting bot...");
 
-    let rx = connect_zmq(&zmq_addr).expect("Unable to connect to zmq endpoint!");
-    log::info!("ZMQ connected.");
+    let rx = connect_redis(&redis_addr).expect("Unable to connect to redis endpoint!");
+    log::info!("Redis connected.");
     let bot = Bot::from_env();
     log::info!("Bot connected.");
     tokio::try_join!(
@@ -409,7 +390,7 @@ async fn run() -> Result<()> {
             ).await;
             Ok(())
         },
-        monitor_pv(rx, &bot, &pool, new_protocol),
+        monitor_pv(rx, &bot, &pool),
         async {
             let path = std::env::var("LAST_UPDATE");
             if let Ok(path) = path {

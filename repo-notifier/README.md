@@ -15,7 +15,7 @@ The address looks like `tcp://repo.aosc.io:xxxxx`.
 You will need the following packages:
 
 ```
-rustc libssl-dev libzmq3-dev pkg-config build-essential
+rustc libssl-dev pkg-config build-essential
 ```
 
 Then `cargo build --release` and `install -Dm755 target/release/repository-notifier /usr/local/bin/repository-notifier`.
