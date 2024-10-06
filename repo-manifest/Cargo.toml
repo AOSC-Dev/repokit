@@ -27,4 +27,4 @@ hex = "0.4"
 scroll = "0.12"
 scroll_derive = "0.12"
 memmap2 = "0.9"
-indexmap = { version = "2.2", features = ["serde"] }
+indexmap = { version = "2.6", features = ["serde"] }
