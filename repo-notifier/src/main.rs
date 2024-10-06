@@ -198,12 +198,12 @@ async fn send_with_retry(msg: &str, bot: &Bot, chat_id: i64) -> Result<()> {
             retries -= 1;
             match e {
                 RequestError::RetryAfter(t) => {
-                    log::warn!("Rate limited, will retry after {} seconds", t.as_secs());
-                    sleep(t).await;
+                    log::warn!("Rate limited, will retry after {} seconds", t.seconds());
+                    sleep(t.duration()).await;
                 }
                 RequestError::MigrateToChatId(id) => {
                     log::warn!("Chat ID {} changed to {}", chat_id, id);
-                    chat_id.0 = id;
+                    chat_id = id;
                 }
                 _ => {
                     log::warn!("Unexpected error occurred ({:?}), retrying ...", e);
