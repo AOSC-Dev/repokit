@@ -19,6 +19,7 @@ pub struct TopicManifest {
     update_date: u64,
     arch: Vec<String>,
     packages: Vec<String>,
+    draft: bool,
 }
 
 #[inline]
@@ -89,6 +90,8 @@ fn scan_topic(topic_path: DirEntry) -> Result<TopicManifest> {
         update_date: updated,
         arch: all_arch,
         packages: all_names.into_iter().collect::<Vec<String>>(),
+        // Set topic status as true by default
+        draft: true,
     })
 }
 
@@ -115,8 +118,9 @@ pub fn collect_topics(repo: &str, path: &Path) -> Result<Vec<TopicManifest>> {
             continue;
         }
         let mut manifest = manifest.unwrap();
-        if let Some(desc) = descriptions.get(&manifest.name) {
+        if let Some((desc, draft)) = descriptions.get(&manifest.name) {
             manifest.description = Some(desc.clone());
+            manifest.draft = *draft;
         } else {
             warn!("{}: No description available.", manifest.name);
         }
