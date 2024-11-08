@@ -16,6 +16,7 @@ struct GitHubPullRequest {
     number: u64,
     title: String,
     head: GitHubBranch,
+    draft: bool,
 }
 
 fn fetch_description(request: RequestBuilder, page: usize) -> Result<Vec<GitHubPullRequest>> {
@@ -51,17 +52,20 @@ fn create_request(repo: &str) -> Result<RequestBuilder> {
     Ok(request)
 }
 
-pub fn fetch_descriptions(repo: &str) -> Result<HashMap<String, String>> {
+pub fn fetch_descriptions(repo: &str) -> Result<HashMap<String, (String, bool)>> {
     let repo_name = repo.split('/').next();
     repo_name.ok_or_else(|| anyhow!("Invalid repo name: {}", repo))?;
-    let mut results: HashMap<String, String> = HashMap::new();
+    let mut results = HashMap::new();
     let mut page = 1usize;
     loop {
         let request = create_request(repo)?;
         let this_page = fetch_description(request, page)?;
         let no_next_page = this_page.len() < 100;
         for entry in this_page {
-            results.insert(entry.head.name, entry.title.trim().to_string());
+            results.insert(
+                entry.head.name,
+                (entry.title.trim().to_string(), entry.draft),
+            );
         }
         if no_next_page {
             break;
