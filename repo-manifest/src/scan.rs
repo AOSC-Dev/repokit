@@ -74,6 +74,19 @@ fn is_iso(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
+#[inline]
+fn is_preview(entry: &DirEntry) -> bool {
+    entry
+        .path()
+        .parent()
+        .is_some_and(|p| p.ends_with("preview"))
+}
+
+#[inline]
+fn not_a_preview_iso(entry: &DirEntry) -> bool {
+    is_iso(entry) && (!is_preview(entry))
+}
+
 /// Calculate the Sha256 checksum of the given stream
 pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
     let mut hasher = Sha256::new();
@@ -135,7 +148,7 @@ pub fn collect_tarballs<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
 }
 
 pub fn collect_iso<P: AsRef<Path>>(root: P) -> Result<Vec<PathBuf>> {
-    collect_files(root, is_iso)
+    collect_files(root, not_a_preview_iso)
 }
 
 pub fn increment_scan_files(
