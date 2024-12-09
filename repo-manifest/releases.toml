@@ -66,13 +66,6 @@ loc = "China"
 loc-tr = "nju-loc"
 
 [[mirrors]]
-name = "QVQNetwork Open Source Mirror"
-name-tr = "qvq-name"
-url = "https://mirrors.qvq.net.cn/anthon/aosc-os/"
-loc = "China"
-loc-tr = "qvq-loc"
-
-[[mirrors]]
 name = "SJTUG Mirror (Shanghai Jiao Tong University)"
 name-tr = "sjtug-name"
 url = "https://mirror.sjtu.edu.cn/anthon/aosc-os/"
