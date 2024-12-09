@@ -66,6 +66,13 @@ loc = "China"
 loc-tr = "nju-loc"
 
 [[mirrors]]
+name = "SDU Mirrors (Shandong University)"
+name-tr = "sdu-name"
+url = "https://mirrors.sdu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "sdu-loc"
+
+[[mirrors]]
 name = "SJTUG Mirror (Shanghai Jiao Tong University)"
 name-tr = "sjtug-name"
 url = "https://mirror.sjtu.edu.cn/anthon/aosc-os/"
