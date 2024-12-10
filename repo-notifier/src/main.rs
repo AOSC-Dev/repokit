@@ -300,9 +300,6 @@ async fn monitor_pv(client: redis::Client, bot: &Bot, db: &sqlite::SqlitePool) -
                     // check if "repository refreshed" needs to be sent
                     if WRITTEN.fetch_and(false, Ordering::SeqCst) {
                         let subs = query!("SELECT chat_id FROM subbed").fetch_all(db).await?;
-                        if !MSGSENT.fetch_and(false, Ordering::SeqCst) {
-                            send_to_subscribers!("⚠️ p-vector encountered some problems. Please check the logs for more details.", bot, subs);
-                        }
                         send_to_subscribers!("🔄 Repository refreshed.", bot, subs);
                     }
                     pending_time = COOLDOWN_TIME; // reset the pending time
