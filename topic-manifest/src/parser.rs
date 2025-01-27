@@ -4,8 +4,8 @@ use nom::{
     combinator::{map, verify},
     error::ErrorKind,
     multi::many1,
-    sequence::{separated_pair, terminated, tuple},
-    IResult,
+    sequence::{separated_pair, terminated},
+    IResult, Parser,
 };
 
 #[inline]
@@ -16,12 +16,13 @@ fn key_name(input: &[u8]) -> IResult<&[u8], &[u8]> {
         } else {
             false
         }
-    })(input)
+    })
+    .parse(input)
 }
 
 #[inline]
 fn separator(input: &[u8]) -> IResult<&[u8], ()> {
-    map(tuple((char(':'), space0)), |_| ())(input)
+    map((char(':'), space0), |_| ()).parse(input)
 }
 
 #[inline]
@@ -31,12 +32,12 @@ fn single_line(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 #[inline]
 fn key_value(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8])> {
-    separated_pair(key_name, separator, single_line)(input)
+    separated_pair(key_name, separator, single_line).parse(input)
 }
 
 #[inline]
 fn single_package(input: &[u8]) -> IResult<&[u8], Vec<(&[u8], &[u8])>> {
-    many1(terminated(key_value, char('\n')))(input)
+    many1(terminated(key_value, char('\n'))).parse(input)
 }
 
 #[inline]
@@ -56,7 +57,7 @@ fn extract_name(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 #[inline]
 pub fn extract_all_names(input: &[u8]) -> IResult<&[u8], Vec<&[u8]>> {
-    many1(terminated(extract_name, char('\n')))(input)
+    many1(terminated(extract_name, char('\n'))).parse(input)
 }
 
 #[test]

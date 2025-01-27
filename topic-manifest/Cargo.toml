@@ -14,5 +14,5 @@ log = "0.4"
 walkdir = "2.5"
 argh = "0.1"
 env_logger = { version = "0.11", default-features = false, features = ["auto-color", "humantime"] }
-nom = "^7"
+nom = "^8"
 attohttpc = { version = "0.28", features = ["json"] }
