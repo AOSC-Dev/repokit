@@ -8,3 +8,6 @@ export CFLAGS="$CFLAGS $COMMON_FLAGS"
 export CXXFLAGS="$CXXFLAGS $COMMON_FLAGS"
 export LDFLAGS="$LDFLAGS $COMMON_FLAGS"
 export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=native -Clink-arg=-mllvm -Clink-arg=-polly-vectorizer=stripmine"
+
+mkdir -p "$PKGDIR/usr/bin"
+install -Dvm755 "$SRCDIR"/repo-clean-topics.py "$PKGDIR"/usr/bin/repo-clean-topics

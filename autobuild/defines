@@ -1,7 +1,7 @@
 PKGNAME=repokit
 PKGSEC=admin
 PKGDES="Toolkit for AOSC OS repository server"
-PKGDEP="sqlite dbus systemd openssl xz zeromq"
+PKGDEP="sqlite dbus systemd openssl xz python-3 requests"
 BUILDDEP="rustc llvm"
 
 USECLANG=1
