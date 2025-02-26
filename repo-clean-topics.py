@@ -33,8 +33,7 @@ def collect_all_branches():
     return branches
 
 
-def main():
-    root_path = PosixPath(sys.argv[1])
+def do_clean_up(root_path: PosixPath) -> None:
     if not root_path.is_dir():
         raise NotADirectoryError(20, "Root path is not a directory", root_path)
     logging.basicConfig(level=logging.INFO)
@@ -62,6 +61,15 @@ def main():
     for pr in closed:
         shutil.rmtree(root_path.joinpath(pr))
         logging.info("Deleted: %s", pr)
+
+
+def main():
+    for path in sys.argv[1:]:
+        root_path = PosixPath(path)
+        try:
+            do_clean_up(root_path)
+        except Exception as e:
+            logging.exception("Error cleaning up: %s", e)
 
 
 if __name__ == "__main__":
