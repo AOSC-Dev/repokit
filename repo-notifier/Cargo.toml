@@ -20,4 +20,4 @@ once_cell = "1"
 inotify = { version = "0.11", features = [ "stream" ] }
 futures-util = "0.3"
 bincode = "^1"
-redis = { version = "0.28", features = ["aio", "tokio-comp"] }
+redis = { version = "0.29", features = ["aio", "tokio-comp"] }
