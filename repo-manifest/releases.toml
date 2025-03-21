@@ -193,6 +193,12 @@ name-tr = "server-name"
 description = "A full-featured system for personal servers."
 description-tr = "server-description"
 
+[distro.mainline.wsl]
+name = "WSL"
+name-tr = "wsl-name"
+description = "A full-featured system for Windows Subsystem for Linux."
+description-tr = "wsl-description"
+
 [distro.retro.desktop]
 name = "Desktop"
 name-tr = "retro-desktop-name"
