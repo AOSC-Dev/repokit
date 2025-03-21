@@ -43,7 +43,7 @@ fn is_tarball(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.ends_with(".tar.xz"))
+        .map(|s| s.ends_with(".tar.xz") || s.ends_with(".wsl"))
         .unwrap_or(false)
 }
 

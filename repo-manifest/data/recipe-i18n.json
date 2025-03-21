@@ -126,6 +126,8 @@
     "buildkit-description": "标准开发环境",
     "server-name": "服务器版",
     "server-description": "全功能个人服务器用系统",
+    "wsl-name": "WSL 版",
+    "server-description": "全功能 Windows Subsystem for Linux 系统",
     "retro-desktop-name": "桌面版",
     "retro-desktop-description": "全功能桌面体验（供老旧设备使用）",
     "retro-base-name": "基础版",
