@@ -1,3 +1,4 @@
+use crate::gz::calculate_gz_decompressed_size;
 use crate::parser::{
     flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, RootFSType, Tarball,
     UserConfig,
@@ -95,11 +96,24 @@ pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
     Ok(hex::encode(hasher.finalize()))
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum TarballStreamType {
+    Gzip,
+    Xzip,
+}
+
 /// Calculate the decompressed size of the given tarball
-pub fn calculate_tarball_decompressed_size<R: Read + Seek>(mut reader: R) -> Result<u64> {
+pub fn calculate_tarball_decompressed_size<R: Read + Seek>(
+    mut reader: R,
+    stream_type: TarballStreamType,
+) -> Result<u64> {
     reader
         .seek(SeekFrom::Start(0))
         .map_err(|e| anyhow!("Could not seek {}", e))?;
+
+    if stream_type == TarballStreamType::Gzip {
+        return Ok(calculate_gz_decompressed_size(reader)?);
+    }
 
     let use_fast = std::env::var("USE_FAST_XZ").is_ok();
 
@@ -293,6 +307,7 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
         }
 
         let is_squashfs = buffer == b"hsqs"[..];
+        let is_gzip = buffer[..2] == [0x1f, 0x8b];
 
         let (real_size, inode) = if raw {
             (
@@ -316,7 +331,14 @@ pub fn scan_files(files: &[PathBuf], root_path: &str, raw: bool) -> Result<Vec<T
             let size = unwrap_or_show_error!(
                 "Could not read file as stream {}: {}",
                 p.display(),
-                calculate_tarball_decompressed_size(&f)
+                calculate_tarball_decompressed_size(
+                    &f,
+                    if is_gzip {
+                        TarballStreamType::Gzip
+                    } else {
+                        TarballStreamType::Xzip
+                    }
+                )
             );
 
             (size, None)
