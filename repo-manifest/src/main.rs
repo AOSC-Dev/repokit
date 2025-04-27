@@ -13,6 +13,7 @@ mod parser;
 mod scan;
 mod sqfs;
 mod xz;
+mod gz;
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
