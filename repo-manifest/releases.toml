@@ -31,6 +31,13 @@ loc = "China"
 loc-tr = "geekpie-loc"
 
 [[mirrors]]
+name = "HIT Open Source Mirror"
+name-tr = "hit-name"
+url = "https://mirror.hit.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "hit-loc"
+
+[[mirrors]]
 name = "ISCAS Open Source Mirror"
 name-tr = "iscas-name"
 url = "https://mirror.iscas.ac.cn/anthon/aosc-os/"
