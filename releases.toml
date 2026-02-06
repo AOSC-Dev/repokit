@@ -1,0 +1,147 @@
+[config]
+path = "/tmp/aosc-os"
+retro_arches = ["armel", "armhf", "i486", "powerpc", "ppc64"]
+
+[bulletin]
+type = "info"
+title = "Thank You for Choosing AOSC OS"
+title-tr = "bulletin-title"
+body = "AOSC OS strives to simplify your user experience and improve your day-to-day productivity."
+body-tr = "bulletin-body"
+
+[[mirrors]]
+name = "Tencent OSS Mirror"
+name-tr = "tencent-name"
+url = "https://mirrors.cloud.tencent.com/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tencent-loc"
+
+[[mirrors]]
+name = "LZUOSS at Lanzhou University"
+name-tr = "lzu-name"
+url = "https://mirror.lzu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "lzu-loc"
+
+[[mirrors]]
+name = "Beijing Foreign Studies University"
+name-tr = "bfsu-name"
+url = "https://mirrors.bfsu.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "bfsu-loc"
+
+[[mirrors]]
+name = "Tsinghua University (TUNA)"
+name-tr = "tuna-name"
+url = "https://mirrors.tuna.tsinghua.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "tuna-loc"
+
+[[mirrors]]
+name = "LUG@USTC"
+name-tr = "ustc-name"
+url = "https://mirrors.ustc.edu.cn/anthon/aosc-os/"
+loc = "China"
+loc-tr = "ustc-loc"
+
+[[mirrors]]
+name = "xTom"
+name-tr = "xtom-name"
+url = "https://mirror.xtom.com.hk/anthon/aosc-os/"
+loc = "Hong Kong"
+loc-tr = "xtom-loc"
+
+[[mirrors]]
+name = "University of Tsukuba"
+name-tr = "tsukuba-name"
+url = "http://ftp.tsukuba.wide.ad.jp/Linux/anthon/aosc-os/"
+loc = "Japan"
+loc-tr = "tsukuba-loc"
+
+[[mirrors]]
+name = "NLUUG"
+name-tr = "nluug-name"
+url = "https://ftp.nluug.nl/os/Linux/distr/anthon/aosc-os/"
+loc = "Europe"
+loc-tr = "nluug-loc"
+
+[[mirrors]]
+name = "KoDDoS HK"
+name-tr = "koddos-name"
+url = "https://mirror-hk.koddos.net/anthon/aosc-os/"
+loc = "Hong Kong"
+loc-tr = "koddos-loc"
+
+[[mirrors]]
+name = "OSSPlanet Mirror Server"
+name-tr = "ossplanet-name"
+url = "https://ftp.ubuntu-tw.net/mirror/anthonos/aosc-os/"
+loc = "Taiwan"
+loc-tr = "ossplanet-loc"
+
+[[mirrors]]
+name = "Fastly CDN"
+name-tr = "fastly-name"
+url = "https://aosc-repo.freetls.fastly.net/aosc-os/"
+loc = "Worldwide"
+loc-tr = "fastly-loc"
+
+[distro.mainline.desktop]
+name = "Desktop"
+name-tr = "desktop-name"
+description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface."
+description-tr = "desktop-description"
+
+[distro.mainline."desktop+nvidia"]
+name = "Desktop (with NVIDIA driver)"
+name-tr = "desktop+nvidia-name"
+description = "Our standard desktop distribution, powered by the KDE Plasma Desktop, which provides an extensive set of standard applications and features with a virtually unlimited amount of customizable settings, complete with an elegant interface (with pre-installed NVIDIA Proprietary Drivers)."
+description-tr = "desktop+nvidia-description"
+
+[distro.mainline.base]
+name = "Base"
+name-tr = "base-name"
+description = "The Base variant provides a minimal set of features, just enough for you to get started. Base is still a pre-configured variant like other AOSC OS variants. Therefore, Base is suitable for performance constrained devices and servers."
+description-tr = "base-description"
+
+[distro.mainline.container]
+name = "Base"
+name-tr = "base-name"
+description = "The Base variant provides a minimal set of features, just enough for you to get started. Base is still a pre-configured variant like other AOSC OS variants. Therefore, Base is suitable for performance constrained devices and servers."
+description-tr = "base-description"
+
+[distro.mainline.buildkit]
+name = "BuildKit"
+name-tr = "buildkit-name"
+description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description-tr = "buildkit-description"
+
+[distro.mainline.server]
+name = "Server"
+name-tr = "server-name"
+description = "Server releases are base system releases with additional tools for hosting remote files and Web contents, providing network routing, and other functions that enriches network access and resources for client devices."
+description-tr = "server-description"
+
+[distro.retro.x11]
+name = "X11"
+name-tr = "retro-x11-name"
+description = "A basic system release bundled with X graphical user interface support. This release contains a basic desktop environment and graphical tools for devices with graphical hardware acceleration."
+description-tr = "retro-x11-description"
+
+[distro.retro.base]
+name = "Base"
+name-tr = "retro-base-name"
+description = "A base system release with a minimal set of applications and tools to get you started. This release is recommended for older, headless (non-graphical), or storage constrained systems."
+description-tr = "retro-base-description"
+
+[distro.retro.server]
+name = "Server"
+name-tr = "retro-server-name"
+description = "A base system release bundled with server applications, for performance and storage contraint servers and older development boards."
+description-tr = "retro-server-description"
+
+[distro.retro.buildkit]
+name = "BuildKit"
+name-tr = "buildkit-name"
+description = "BuildKit is essentially a non-bootable AOSC OS Base with full development support. This particular variant of AOSC OS comes with Autobuild3 and other AOSC OS packaging and maintenance tools, so that you could quickly get started with AOSC OS development or building packages for personal use."
+description-tr = "buildkit-description"

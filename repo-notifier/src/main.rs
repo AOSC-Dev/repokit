@@ -275,18 +275,13 @@ async fn monitor_pv(client: redis::Client, bot: &Bot, db: &sqlite::SqlitePool) -
                         }
                     }
                     Err(e) => {
-                        if e.kind() == redis::ErrorKind::TryAgain {
-                            sleep(Duration::from_secs(1)).await;
-                            continue;
-                        } else {
-                            log::error!("Error occurred while receiving Redis message: {}", e);
-                            fail_count += 1;
-                            if fail_count > 10 {
-                                log::error!("Too many errors encountered. Stopped monitoring Redis!");
-                                // Flush all the pending messages and then return
-                                send_all_pending_messages(&mut pending, bot, db).await.ok();
-                                return Err(anyhow!("Too many errors encountered"));
-                            }
+                        log::error!("Error occurred while receiving Redis message: {}", e);
+                        fail_count += 1;
+                        if fail_count > 10 {
+                            log::error!("Too many errors encountered. Stopped monitoring Redis!");
+                            // Flush all the pending messages and then return
+                            send_all_pending_messages(&mut pending, bot, db).await.ok();
+                            return Err(anyhow!("Too many errors encountered"));
                         }
                     }
                 }

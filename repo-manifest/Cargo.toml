@@ -10,7 +10,7 @@ license = "MIT"
 
 [dependencies]
 anyhow = "1.0"
-rayon = "1.10"
+rayon = "1.11"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -18,13 +18,13 @@ xz2 = "0.1"
 sha2 = "0.10"
 log = "0.4"
 env_logger = "0.11"
-toml = { version = "0.8", features = ["preserve_order"] }
+toml = { version = "0.9", features = ["preserve_order"] }
 clap = { version = "^4", features = ["derive"] }
 walkdir = "2"
 parking_lot = "0.12"
 hex = "0.4"
 # backhand = "0.12"
-scroll = "0.12"
-scroll_derive = "0.12"
+scroll = "0.13"
+scroll_derive = "0.13"
 memmap2 = "0.9"
-indexmap = { version = "2.9", features = ["serde"] }
+indexmap = { version = "2.13", features = ["serde"] }
