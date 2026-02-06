@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT chat_id FROM subbed",
+  "describe": {
+    "columns": [
+      {
+        "name": "chat_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "64e4f3560580ae4f0d25066fab37c5c0d4a9b9582cc01ffb2415fdfe4078101f"
+}
