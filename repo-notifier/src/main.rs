@@ -6,6 +6,7 @@ use serde::Deserialize;
 use sqlx::{migrate, query, sqlite};
 use std::sync::atomic::AtomicBool;
 use std::{sync::atomic::Ordering, time::Duration};
+use teloxide::dispatching::HandlerExt;
 use teloxide::{
     payloads::SendMessageSetters,
     prelude::*,
@@ -371,18 +372,24 @@ async fn run() -> Result<()> {
         .expect("Unable to connect to redis endpoint!");
     log::info!("Redis connected.");
     let bot = Bot::from_env();
+    let handler = Update::filter_message()
+        .filter_command::<Command>()
+        .endpoint(
+            move |bot: Bot, msg: Message, cmd: Command, pool_clone: sqlite::SqlitePool| async move {
+                if let Err(e) = answer(bot, msg, cmd, pool_clone.clone()).await {
+                    log::error!("An error occurred while replying to the user: {}", e);
+                }
+                respond(())
+            },
+        );
     log::info!("Bot connected.");
     tokio::try_join!(
         async {
-            teloxide::repl(
-                bot.clone(),
-                move |bot: Bot, msg: Message, cmd: Command, pool_clone: sqlite::SqlitePool| async move {
-                    if let Err(e) = answer(bot, msg, cmd, pool_clone.clone()).await {
-                        log::error!("An error occurred while replying to the user: {}", e);
-                    }
-                    respond(())
-                },
-            ).await;
+            Dispatcher::builder(bot.clone(), handler)
+                .dependencies(dptree::deps![pool.clone()])
+                .build()
+                .dispatch()
+                .await;
             Ok(())
         },
         monitor_pv(rx, &bot, &pool),
