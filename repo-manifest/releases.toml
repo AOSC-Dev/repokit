@@ -194,6 +194,12 @@ name-tr = "buildkit-name"
 description = "A standardized development environment."
 description-tr = "buildkit-description"
 
+[distro.mainline.container]
+name = "Container"
+name-tr = "container-name"
+description = "A minimal system for containers."
+description-tr = "container-description"
+
 [distro.mainline.server]
 name = "Server"
 name-tr = "server-name"
@@ -229,3 +235,9 @@ name = "BuildKit"
 name-tr = "retro-buildkit-name"
 description = "A standardized development environment (for legacy devices)."
 description-tr = "retro-buildkit-description"
+
+[distro.retro.container]
+name = "Container"
+name-tr = "retro-container-name"
+description = "A minimal system for containers (for legacy devices)."
+description-tr = "retro-container-description"
