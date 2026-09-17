@@ -112,13 +112,13 @@ pub fn calculate_tarball_decompressed_size<R: Read + Seek>(
         .map_err(|e| anyhow!("Could not seek {}", e))?;
 
     if stream_type == TarballStreamType::Gzip {
-        return Ok(calculate_gz_decompressed_size(reader)?);
+        return calculate_gz_decompressed_size(reader);
     }
 
     let use_fast = std::env::var("USE_FAST_XZ").is_ok();
 
     if use_fast {
-        return Ok(calculate_xz_decompressed_size(reader)?);
+        return calculate_xz_decompressed_size(reader);
     }
 
     let size = {

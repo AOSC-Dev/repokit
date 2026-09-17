@@ -12,7 +12,7 @@ fn read_varint<R: Read>(mut reader: R) -> Result<u64> {
             bail!("Bad shift value");
         }
         d = reader.ioread::<u8>()?.into();
-        v |= ((d & 0x7f) as u64) << shift;
+        v |= (d & 0x7f) << shift;
         shift += 7;
 
         if d & 0x80 == 0 {
@@ -40,7 +40,7 @@ pub fn calculate_xz_decompressed_size<R: Read + Seek>(mut reader: R) -> Result<u
             pos -= 4;
             reader.seek(SeekFrom::Start(pos + 2))?;
             reader.read_exact(&mut buffer)?;
-            if buffer == [b'Y', b'Z'] {
+            if buffer == *b"YZ" {
                 break;
             }
         }

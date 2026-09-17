@@ -12,7 +12,7 @@ pub fn calculate_gz_decompressed_size<R: Read + Seek>(mut reader: R) -> Result<u
     // our decoded value, that means the file size is too large to fit in 32 bits.
     if (footer_pos * 2) > size {
         // compensate for wrapped around 32-bit size
-        size = (1 << 32) + size;
+        size += 1 << 32;
     }
 
     Ok(size)

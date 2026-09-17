@@ -129,7 +129,7 @@ impl FileInodeHeader {
     fn block_count(&self, block_size: u32) -> u32 {
         let base_count = self.size / block_size;
         if self.frag_index == 0xFFFFFFFF {
-            if self.size % block_size > 0 {
+            if !self.size.is_multiple_of(block_size) {
                 base_count + 1
             } else {
                 base_count
@@ -144,7 +144,7 @@ impl ExtendedFileInodeHeader {
     fn block_count(&self, block_size: u32) -> u64 {
         let base_count = self.size / block_size as u64;
         if self.frag_index == 0xFFFFFFFF {
-            if self.size % block_size as u64 > 0 {
+            if !self.size.is_multiple_of(block_size as u64) {
                 base_count + 1
             } else {
                 base_count
@@ -176,7 +176,7 @@ fn sizeof_inode(data: &[u8], block_size: u32) -> (u64, u64) {
         return (0, 0);
     }
     let record: InodeHeader = data.pread_with(0, LE).unwrap();
-    return match record.inode_type {
+    match record.inode_type {
         1 | 4..=7 | 11..=14 => (0, RECORD_SIZES[record.inode_type as usize]),
         // file inode type
         2 => {
@@ -208,12 +208,12 @@ fn sizeof_inode(data: &[u8], block_size: u32) -> (u64, u64) {
             let record: ExtendedFileInodeHeader = data.pread_with(16, LE).unwrap();
 
             (
-                record.size.into(),
-                record.block_count(block_size) as u64 * 4u64 + 40,
+                record.size,
+                record.block_count(block_size) * 4u64 + 40,
             )
         }
         _ => (0, 0),
-    };
+    }
 }
 
 fn parse_super_block(s: &[u8]) -> Result<SqsSuper> {

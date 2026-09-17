@@ -155,12 +155,12 @@ async fn main() -> std::io::Result<()> {
         v = async {
             monitor_worker
                 .await
-                .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
+                .map_err(|err| std::io::Error::other(err))
         } => v,
         v = async {
             monitor_worker_lk
                 .await
-                .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
+                .map_err(|err| std::io::Error::other(err))
         } => v
     };
     res?;

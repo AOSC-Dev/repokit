@@ -116,7 +116,7 @@ pub async fn webhook_new_post(
             ctx.target,
             format!(
                 "<a href=\"https://bbs.aosc.io/t/{}\">{}</a>\n<a href=\"https://bbs.aosc.io/u/{}/summary\">{}</a>\n{}",
-                payload.post.topic_id, &payload.post.topic_title, payload.post.user_id, payload.post.username, &preview_html,
+                payload.post.topic_id, payload.post.topic_title, payload.post.user_id, payload.post.username, preview_html,
             ),
         )
         .parse_mode(ParseMode::Html)
