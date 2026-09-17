@@ -87,13 +87,6 @@ pub struct UserBasicConfig {
     retro_arches: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct UserMirrorConfig {
-    name: String,
-    loc: String,
-    url: String,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserVariantConfig {
     name: String,

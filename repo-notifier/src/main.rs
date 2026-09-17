@@ -88,16 +88,6 @@ struct PVMessage {
     to_ver: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
-struct PVMessageNew {
-    comp: String,
-    pkg: String,
-    arch: String,
-    method: u8,
-    from_ver: Option<String>,
-    to_ver: Option<String>,
-}
-
 impl PVMessage {
     fn to_html(&self) -> String {
         match self.method.as_new_type() {

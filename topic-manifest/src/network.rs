@@ -13,7 +13,6 @@ struct GitHubBranch {
 
 #[derive(Deserialize, Clone)]
 struct GitHubPullRequest {
-    number: u64,
     title: String,
     head: GitHubBranch,
     draft: bool,

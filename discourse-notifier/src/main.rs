@@ -7,7 +7,6 @@ use teloxide::{prelude::*, types::ParseMode};
 
 #[derive(Clone, Deserialize)]
 struct SupportPostPayload {
-    id: u64,
     username: String,
     user_id: u64,
     topic_id: u64,
@@ -25,11 +24,6 @@ pub struct PostPayload {
 #[derive(Deserialize, Clone)]
 struct DiscourseReviewable {
     id: u64,
-    status: i8,
-    #[serde(rename = "type")]
-    type_: String,
-    // user_id: i64,
-    created_by_id: i64,
 }
 
 #[derive(Deserialize)]

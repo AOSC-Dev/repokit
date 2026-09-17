@@ -32,7 +32,6 @@ pub struct Variant {
 /// AOSC OS Tarball Recipe structure
 #[derive(Deserialize)]
 pub struct Recipe {
-    pub version: usize,
     variants: Vec<Variant>,
 }
 
