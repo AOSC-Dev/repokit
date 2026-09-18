@@ -1,3 +1,4 @@
+use digest_io::IoWrapper;
 use crate::gz::calculate_gz_decompressed_size;
 use crate::parser::{
     flatten_variants, get_retro_arches, get_splitted_name, parse_manifest, RootFSType, Tarball,
@@ -90,10 +91,10 @@ fn not_a_preview_iso(entry: &DirEntry) -> bool {
 
 /// Calculate the Sha256 checksum of the given stream
 pub fn sha256sum<R: Read>(mut reader: R) -> Result<String> {
-    let mut hasher = Sha256::new();
+    let mut hasher = IoWrapper(Sha256::new());
     std::io::copy(&mut reader, &mut hasher)?;
 
-    Ok(hex::encode(hasher.finalize()))
+    Ok(hex::encode(hasher.0.finalize()))
 }
 
 #[derive(Clone, Copy, PartialEq)]
